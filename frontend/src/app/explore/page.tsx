@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { getMediaUrl, getStories, Story } from "@/services/storyService";
 import { BookOpen, Headphones, Loader2, Play, Plus } from "lucide-react";
 
-export default function ExplorePage() {
+function ExploreContent() {
   const searchParams = useSearchParams();
   const searchQuery = searchParams.get("search") || "";
   const typeQuery = searchParams.get("type") || "";
@@ -64,118 +64,124 @@ export default function ExplorePage() {
 
   return (
     <AppLayout rightPanel={false}>
-      <div className="mb-8 flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+      <div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <div>
-          <h1 className="text-4xl font-extrabold text-textMain">
-            {typeQuery === "audiobooks" ? "Audiobooks" : "Explore Stories"}
-          </h1>
-
+          <h1 className="text-3xl font-bold">Explore Stories</h1>
           <p className="mt-2 text-textMuted">
-            {searchQuery
-              ? `Search results for "${searchQuery}"`
-              : "Discover real stories uploaded by EchoTale users."}
+            Browse uploaded books, generated audiobooks, and stories.
           </p>
         </div>
 
         <Link
-          href="/stories/upload"
-          className="inline-flex h-[52px] items-center justify-center gap-2 rounded-2xl bg-primary px-6 font-bold text-white shadow-[0_12px_28px_rgba(108,77,246,0.24)]"
+          href="/upload"
+          className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-semibold text-white"
         >
-          <Plus size={20} />
+          <Plus size={18} />
           Upload Story
         </Link>
       </div>
 
-      {loading && (
-        <div className="grid min-h-[45vh] place-items-center">
-          <div className="flex items-center gap-3 rounded-3xl bg-white px-6 py-5 shadow-soft">
-            <Loader2 className="animate-spin text-primary" />
-            <span className="font-semibold">Loading stories...</span>
-          </div>
+      {searchQuery && (
+        <div className="mb-6 rounded-widget bg-white p-4 shadow-soft">
+          <p className="text-sm text-textMuted">
+            Showing results for{" "}
+            <span className="font-semibold text-text">"{searchQuery}"</span>
+          </p>
         </div>
       )}
 
-      {error && (
-        <div className="rounded-2xl bg-red-50 px-5 py-4 font-semibold text-red-600">
+      {loading && (
+        <div className="flex min-h-[300px] items-center justify-center">
+          <Loader2 className="animate-spin text-primary" size={36} />
+        </div>
+      )}
+
+      {!loading && error && (
+        <div className="rounded-widget bg-white p-6 text-red-500 shadow-soft">
           {error}
         </div>
       )}
 
-      {!loading && !filteredStories.length && (
-        <div className="rounded-[28px] bg-white p-10 text-center shadow-soft">
-          <h2 className="text-2xl font-bold text-textMain">
-            No stories found
-          </h2>
+      {!loading && !error && filteredStories.length === 0 && (
+        <div className="rounded-widget bg-white p-8 text-center shadow-soft">
+          <BookOpen className="mx-auto text-textMuted" size={42} />
+          <h2 className="mt-4 text-xl font-bold">No stories found</h2>
           <p className="mt-2 text-textMuted">
-            Try another search or upload a new PDF story.
+            Upload a PDF story to generate audio and see it here.
           </p>
-
-          <Link
-            href="/stories/upload"
-            className="mt-6 inline-flex rounded-2xl bg-primary px-6 py-3 font-bold text-white"
-          >
-            Upload Story
-          </Link>
         </div>
       )}
 
-      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-        {filteredStories.map((story) => {
-          const coverUrl = getMediaUrl(story.cover_image);
-          const partsCount = story.audio_parts?.length || 0;
-
-          return (
+      {!loading && !error && filteredStories.length > 0 && (
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
+          {filteredStories.map((story) => (
             <Link
               href={`/stories/${story.id}`}
               key={story.id}
-              className="group overflow-hidden rounded-[28px] bg-white p-4 shadow-soft transition hover:-translate-y-1 hover:shadow-card"
+              className="group overflow-hidden rounded-widget bg-white shadow-soft transition hover:-translate-y-1 hover:shadow-card"
             >
-              <div className="relative h-56 overflow-hidden rounded-[22px] bg-soft">
-                {coverUrl ? (
+              <div className="relative h-56 bg-soft">
+                {story.cover_image ? (
                   <img
-                    src={coverUrl}
+                    src={getMediaUrl(story.cover_image)}
                     alt={story.title}
-                    className="h-full w-full object-cover transition group-hover:scale-105"
+                    className="h-full w-full object-cover"
                   />
                 ) : (
-                  <div className="grid h-full place-items-center bg-gradient-to-br from-[#2B1B7A] to-[#A855F7] text-white">
-                    <BookOpen size={46} />
+                  <div className="flex h-full items-center justify-center">
+                    <BookOpen className="text-textMuted" size={48} />
                   </div>
                 )}
 
-                <div className="absolute bottom-4 right-4 grid h-12 w-12 place-items-center rounded-full bg-white text-primary shadow-card">
-                  <Play size={22} />
+                <div className="absolute bottom-4 right-4 grid h-12 w-12 place-items-center rounded-full bg-primary text-white shadow-card">
+                  <Play size={20} fill="currentColor" />
                 </div>
               </div>
 
-              <div className="mt-4">
-                <h2 className="line-clamp-2 text-xl font-extrabold text-textMain">
+              <div className="p-5">
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <span className="rounded-full bg-soft px-3 py-1 text-xs font-semibold text-primary">
+                    {story.category || "Story"}
+                  </span>
+
+                  {(story.audio_parts?.length || 0) > 0 && (
+                    <span className="inline-flex items-center gap-1 text-xs text-textMuted">
+                      <Headphones size={14} />
+                      {story.audio_parts?.length} parts
+                    </span>
+                  )}
+                </div>
+
+                <h2 className="line-clamp-2 text-lg font-bold">
                   {story.title}
                 </h2>
 
-                <p className="mt-1 text-textMuted">
+                <p className="mt-1 text-sm text-textMuted">
                   by {story.author || "Unknown Author"}
                 </p>
 
-                <div className="mt-4 flex flex-wrap items-center gap-2 text-sm">
-                  <span className="rounded-full bg-soft px-3 py-1 font-bold text-primary">
-                    {story.category || "Book"}
-                  </span>
+                <p className="mt-3 line-clamp-2 text-sm text-textMuted">
+                  {story.description || "No description available."}
+                </p>
 
-                  <span className="rounded-full bg-page px-3 py-1 font-bold text-textMuted">
-                    {story.duration || 0} min
-                  </span>
-
-                  <span className="inline-flex items-center gap-1 rounded-full bg-page px-3 py-1 font-bold text-textMuted">
-                    <Headphones size={14} />
-                    {partsCount} parts
-                  </span>
-                </div>
+                {story.audio_status === "generating" && (
+                  <p className="mt-4 text-sm font-semibold text-primary">
+                    Audio is generating...
+                  </p>
+                )}
               </div>
             </Link>
-          );
-        })}
-      </div>
+          ))}
+        </div>
+      )}
     </AppLayout>
+  );
+}
+
+export default function ExplorePage() {
+  return (
+    <Suspense fallback={null}>
+      <ExploreContent />
+    </Suspense>
   );
 }

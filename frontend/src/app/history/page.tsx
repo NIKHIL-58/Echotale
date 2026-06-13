@@ -1,4 +1,16 @@
-import { AppLayout } from '@/components/layout/AppLayout';
-import { StoryRow } from '@/components/story/StoryRow';
-import { stories } from '@/lib/mock-data';
-export default function Page(){ return <AppLayout><h1 className="text-3xl font-bold">History</h1>{['Today','Yesterday','This week'].map((group,i)=><section key={group} className="mt-7"><h2 className="mb-3 font-bold">{group}</h2><div className="space-y-3">{stories.slice(i,i+2).map(s=><StoryRow key={`${group}-${s.id}`} story={s}/>)}</div></section>)}</AppLayout> }
+import { AppLayout } from "@/components/layout/AppLayout";
+
+export default function Page() {
+  return (
+    <AppLayout>
+      <h1 className="text-3xl font-bold">History</h1>
+
+      <section className="mt-6 rounded-widget bg-white p-6 shadow-soft">
+        <h2 className="text-xl font-bold">Listening history</h2>
+        <p className="mt-2 text-textMuted">
+          Your recently played stories will appear here soon.
+        </p>
+      </section>
+    </AppLayout>
+  );
+}

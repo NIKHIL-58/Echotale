@@ -1,2 +1,22 @@
-import { stories } from '@/lib/mock-data';
-export function QueueDrawer(){ return <aside className="rounded-widget bg-white p-5 shadow-soft"><h3 className="font-bold">Queue</h3>{stories.slice(0,4).map((s)=><div className="mt-4 flex items-center gap-3" key={s.id}><img src={s.cover} className="h-12 w-12 rounded-lg object-cover"/><div><p className="text-sm font-bold">{s.title}</p><p className="text-xs text-textMuted">{s.author}</p></div></div>)}</aside> }
+import { ListMusic } from "lucide-react";
+
+export function QueueDrawer() {
+  return (
+    <aside className="rounded-widget bg-white p-5 shadow-soft">
+      <h3 className="font-bold">Queue</h3>
+
+      <div className="mt-4 flex items-center gap-3 rounded-2xl bg-bg p-4">
+        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-white">
+          <ListMusic size={22} className="text-textMuted" />
+        </div>
+
+        <div>
+          <p className="text-sm font-bold">No queue yet</p>
+          <p className="text-xs text-textMuted">
+            Audio parts will appear here when you play a story.
+          </p>
+        </div>
+      </div>
+    </aside>
+  );
+}

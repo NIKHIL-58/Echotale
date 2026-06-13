@@ -1,2 +1,14 @@
-import { authors } from '@/lib/mock-data';
-export function PopularAuthors(){ return <section className="rounded-widget bg-white p-5 shadow-soft"><h3 className="font-bold">Popular Authors</h3><div className="mt-5 flex gap-5 overflow-x-auto">{authors.map(a=><a href={`/authors/${a.id}`} key={a.id} className="text-center"><img src={a.avatar} className="h-16 w-16 rounded-full object-cover"/><p className="mt-2 text-sm font-semibold">{a.name}</p></a>)}</div></section> }
+export function PopularAuthors() {
+  return (
+    <section className="rounded-widget bg-white p-5 shadow-soft">
+      <h3 className="font-bold">Popular Authors</h3>
+
+      <div className="mt-5 rounded-2xl bg-bg p-4">
+        <p className="text-sm font-semibold">No authors yet</p>
+        <p className="mt-1 text-xs text-textMuted">
+          Authors will appear here when stories are uploaded.
+        </p>
+      </div>
+    </section>
+  );
+}
