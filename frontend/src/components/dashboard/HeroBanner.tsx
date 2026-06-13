@@ -1,3 +1,43 @@
-import { ArrowRight } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
-export function HeroBanner(){ return <section className="relative h-[280px] overflow-hidden rounded-widget bg-deep p-8 text-white shadow-soft"><img src="https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=1300&h=500&fit=crop" className="absolute inset-0 h-full w-full object-cover opacity-70"/><div className="absolute inset-0 bg-gradient-to-r from-deep via-deep/50 to-transparent"/><div className="relative z-10 max-w-md"><span className="rounded-full bg-white/10 px-3 py-1 text-xs">★ Editor's Pick</span><h1 className="mt-5 text-4xl font-bold leading-tight">Stories That Resonate</h1><p className="mt-4 text-lg">Listen. Feel. Remember.</p><Button className="mt-6 bg-white text-primary">Explore Now <ArrowRight className="ml-2 inline h-4 w-4"/></Button></div></section> }
+"use client";
+
+import Link from "next/link";
+import { ArrowRight, Star } from "lucide-react";
+
+export function HeroBanner() {
+  return (
+    <section className="relative overflow-hidden rounded-[32px] bg-[#120A3D] px-8 py-14 text-white shadow-card md:px-12">
+      <div
+        className="absolute inset-0 opacity-55"
+        style={{
+          backgroundImage:
+            "linear-gradient(90deg, rgba(18,10,61,0.95), rgba(18,10,61,0.35)), url('https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=1600&h=700&fit=crop')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      />
+
+      <div className="relative z-10 max-w-2xl">
+        <div className="mb-8 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm font-bold backdrop-blur">
+          <Star size={16} className="fill-white" />
+          Editor&apos;s Pick
+        </div>
+
+        <h1 className="text-5xl font-extrabold leading-tight md:text-6xl">
+          Stories That Resonate
+        </h1>
+
+        <p className="mt-6 text-2xl font-medium text-white/90">
+          Listen. Feel. Remember.
+        </p>
+
+        <Link
+          href="/explore"
+          className="mt-10 inline-flex h-[64px] items-center justify-center gap-4 rounded-2xl bg-white px-8 text-xl font-extrabold text-primary shadow-[0_18px_40px_rgba(255,255,255,0.35)] transition hover:scale-[1.02]"
+        >
+          Explore Now
+          <ArrowRight size={24} />
+        </Link>
+      </div>
+    </section>
+  );
+}
