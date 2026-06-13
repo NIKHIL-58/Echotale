@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Bell, ChevronDown, LogOut, Search, User } from "lucide-react";
 import { getStoredUser, getToken, logoutUser } from "@/lib/auth";
 import { getMediaUrl } from "@/services/storyService";
+import { API_URL } from "@/lib/api";
 
 type AuthUser = {
   id: string;
@@ -43,7 +44,7 @@ export function Topbar() {
       if (!token) return;
 
       try {
-        const res = await fetch("http://127.0.0.1:8000/api/auth/me/", {
+        const res = await fetch(`${API_URL}/auth/me/`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

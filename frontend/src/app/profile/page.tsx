@@ -15,6 +15,7 @@ import {
   User,
   X,
 } from "lucide-react";
+import { API_URL } from "@/lib/api";
 
 type ProfileUser = {
   id: string;
@@ -112,7 +113,7 @@ export default function ProfilePage() {
         return;
       }
 
-      const res = await fetch("http://127.0.0.1:8000/api/auth/profile/", {
+      const res = await fetch(`${API_URL}/auth/profile/`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -159,7 +160,7 @@ export default function ProfilePage() {
         return;
       }
 
-      const res = await fetch("http://127.0.0.1:8000/api/auth/profile/", {
+      const res = await fetch(`${API_URL}/auth/profile/`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
