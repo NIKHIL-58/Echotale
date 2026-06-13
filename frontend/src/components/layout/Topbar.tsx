@@ -1,3 +1,129 @@
-import { Bell, ChevronDown } from 'lucide-react';
-import { SearchInput } from '@/components/ui/SearchInput';
-export function Topbar() { return <header className="mb-5 flex items-center justify-between gap-4"><SearchInput className="max-w-[420px] flex-1"/><div className="flex items-center gap-4"><Bell className="h-5 w-5 text-textMain"/><img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop" className="h-10 w-10 rounded-full object-cover" alt="profile"/><span className="hidden text-sm font-semibold sm:block">Hi, Ananya</span><ChevronDown className="h-4 w-4"/></div></header>; }
+"use client";
+
+import { useEffect, useState } from "react";
+import { Bell, ChevronDown, LogOut, Search, User } from "lucide-react";
+import { getStoredUser, getToken, logoutUser } from "@/lib/auth";
+
+type AuthUser = {
+  id: string;
+  name: string;
+  email: string;
+  avatar?: string;
+  role?: string;
+  is_premium?: boolean;
+  favorite_genres?: string[];
+  language?: string;
+  listening_goal?: number;
+};
+
+export function Topbar() {
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const storedUser = getStoredUser();
+
+    if (storedUser) {
+      setUser(storedUser);
+    }
+
+    async function fetchProfile() {
+      const token = getToken();
+
+      if (!token) return;
+
+      try {
+        const res = await fetch("http://127.0.0.1:8000/api/auth/me/", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+          setUser(data.data);
+          localStorage.setItem("user", JSON.stringify(data.data));
+        }
+      } catch {
+        console.log("Profile fetch failed");
+      }
+    }
+
+    fetchProfile();
+  }, []);
+
+  const displayName = user?.name || "User";
+  const firstName = displayName.split(" ")[0];
+
+  return (
+    <header className="flex items-center justify-between gap-6">
+      <div className="flex h-16 w-full max-w-[560px] items-center gap-4 rounded-2xl border border-[#EAECF0] bg-white px-5 shadow-sm">
+        <Search className="text-[#667085]" size={24} />
+        <input
+          placeholder="Search stories, authors, podcasts..."
+          className="w-full bg-transparent text-base outline-none placeholder:text-[#98A2B3]"
+        />
+      </div>
+
+      <div className="relative flex items-center gap-5">
+        <button className="grid h-11 w-11 place-items-center rounded-full bg-white text-[#10142D] shadow-sm hover:bg-[#EEE9FF]">
+          <Bell size={22} />
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setMenuOpen((prev) => !prev)}
+          className="flex items-center gap-3 rounded-2xl px-2 py-2 hover:bg-white"
+        >
+          <div className="grid h-12 w-12 place-items-center overflow-hidden rounded-full bg-[#EEE9FF] text-[#6C4DF6]">
+            {user?.avatar ? (
+              <img
+                src={user.avatar}
+                alt={displayName}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <User size={24} />
+            )}
+          </div>
+
+          <div className="hidden text-left md:block">
+            <p className="text-base font-bold text-[#10142D]">
+              Hi, {firstName}
+            </p>
+            <p className="text-xs text-[#667085]">{user?.email}</p>
+          </div>
+
+          <ChevronDown size={18} className="text-[#667085]" />
+        </button>
+
+        {menuOpen && (
+          <div className="absolute right-0 top-16 z-50 w-64 rounded-3xl border border-[#EAECF0] bg-white p-3 shadow-[0_18px_50px_rgba(16,20,45,0.15)]">
+            <div className="border-b border-[#EAECF0] px-3 py-3">
+              <p className="font-bold text-[#10142D]">{displayName}</p>
+              <p className="mt-1 text-sm text-[#667085]">{user?.email}</p>
+            </div>
+
+            <a
+              href="/profile"
+              className="mt-2 flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-semibold text-[#10142D] hover:bg-[#EEE9FF]"
+            >
+              <User size={18} />
+              Profile
+            </a>
+
+            <button
+              type="button"
+              onClick={logoutUser}
+              className="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left text-sm font-semibold text-red-600 hover:bg-red-50"
+            >
+              <LogOut size={18} />
+              Logout
+            </button>
+          </div>
+        )}
+      </div>
+    </header>
+  );
+}

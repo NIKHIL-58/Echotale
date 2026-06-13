@@ -1,3 +1,27 @@
-export function saveToken(token: string) { if (typeof window !== 'undefined') localStorage.setItem('echotale_token', token); }
-export function clearToken() { if (typeof window !== 'undefined') localStorage.removeItem('echotale_token'); }
-export function getToken() { return typeof window === 'undefined' ? null : localStorage.getItem('echotale_token'); }
+export function getToken() {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem("access_token");
+}
+
+export function getStoredUser() {
+  if (typeof window === "undefined") return null;
+
+  const user = localStorage.getItem("user");
+
+  if (!user) return null;
+
+  try {
+    return JSON.parse(user);
+  } catch {
+    return null;
+  }
+}
+
+export function logoutUser() {
+  if (typeof window === "undefined") return;
+
+  localStorage.removeItem("access_token");
+  localStorage.removeItem("user");
+
+  window.location.href = "/auth/login";
+}
