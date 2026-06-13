@@ -2,6 +2,7 @@ import os
 from datetime import timedelta
 from pathlib import Path
 
+import dj_database_url
 from dotenv import load_dotenv
 from mongoengine import connect
 
@@ -15,11 +16,27 @@ SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key")
 
 DEBUG = os.getenv("DEBUG", "True").lower() == "true"
 
+
 ALLOWED_HOSTS = [
     host.strip()
-    for host in os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+    for host in os.getenv(
+        "ALLOWED_HOSTS",
+        "localhost,127.0.0.1,.onrender.com"
+    ).split(",")
     if host.strip()
 ]
+
+
+CORS_ALLOWED_ORIGINS = [
+    origin.strip()
+    for origin in os.getenv(
+        "CORS_ALLOWED_ORIGINS",
+        "http://localhost:3000"
+    ).split(",")
+    if origin.strip()
+]
+
+CORS_ALLOW_CREDENTIALS = True
 
 
 INSTALLED_APPS = [
@@ -51,6 +68,8 @@ MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
 
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
+
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -61,6 +80,7 @@ MIDDLEWARE = [
 
 
 ROOT_URLCONF = "config.urls"
+
 
 TEMPLATES = [
     {
@@ -78,27 +98,28 @@ TEMPLATES = [
     }
 ]
 
+
 WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"
 
 
-# Django admin/auth/session uses SQLite.
-# EchoTale app data uses MongoDB Atlas through MongoEngine.
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+DATABASE_URL = os.getenv("DATABASE_URL", "")
+
+if DATABASE_URL:
+    DATABASES = {
+        "default": dj_database_url.config(
+            default=DATABASE_URL,
+            conn_max_age=600,
+            ssl_require=not DEBUG,
+        )
     }
-}
-
-
-CORS_ALLOWED_ORIGINS = [
-    origin.strip()
-    for origin in os.getenv("CORS_ALLOWED_ORIGINS", "http://localhost:3000").split(",")
-    if origin.strip()
-]
-
-CORS_ALLOW_CREDENTIALS = True
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
 
 
 REST_FRAMEWORK = {
@@ -118,9 +139,13 @@ USE_TZ = True
 
 
 STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
+
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
@@ -138,8 +163,6 @@ JWT_ACCESS_TOKEN_LIFETIME = timedelta(
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 
 
-# MongoEngine default connection.
-# Required for UserDocument.objects(...), StoryDocument.objects(...), etc.
 if MONGODB_URI:
     connect(
         host=MONGODB_URI,
