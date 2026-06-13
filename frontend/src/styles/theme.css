@@ -1,0 +1,5 @@
+.echotale-card {
+  background: var(--color-card);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-soft);
+}

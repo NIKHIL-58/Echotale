@@ -1,0 +1,13 @@
+:root {
+  --color-primary: #6C4DF6;
+  --color-primary-soft: #EEE9FF;
+  --color-bg: #F7F8FC;
+  --color-card: #FFFFFF;
+  --color-text: #10142D;
+  --color-muted: #667085;
+  --color-border: #EAECF0;
+  --radius-card: 16px;
+  --radius-widget: 24px;
+  --shadow-soft: 0 12px 32px rgba(16, 20, 45, 0.08);
+  --player-height: 92px;
+}
