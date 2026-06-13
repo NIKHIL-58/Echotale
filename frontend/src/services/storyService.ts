@@ -1,4 +1,7 @@
-const API_URL = "http://127.0.0.1:8000/api";
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000";
+
+const API_URL = `${API_BASE}/api`;
 
 export type AudioPart = {
   part_number: number;
@@ -37,7 +40,7 @@ export function getMediaUrl(path?: string) {
     return path;
   }
 
-  return `http://127.0.0.1:8000${path}`;
+  return `${API_BASE}${path}`;
 }
 
 export async function getStories(): Promise<Story[]> {
@@ -65,6 +68,10 @@ export async function getStory(id: string): Promise<Story> {
 export async function createStory(formData: FormData) {
   const token = localStorage.getItem("access_token");
 
+  if (!token) {
+    throw new Error("Please login first before uploading a story.");
+  }
+
   const res = await fetch(`${API_URL}/stories/create/`, {
     method: "POST",
     headers: {
@@ -76,7 +83,7 @@ export async function createStory(formData: FormData) {
   const data = await res.json();
 
   if (!res.ok || !data.success) {
-    throw new Error(data.message || "Story upload failed");
+    throw new Error(data.message || data.detail || "Story upload failed");
   }
 
   return data.data;
