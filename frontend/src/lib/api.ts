@@ -1,7 +1,4 @@
-import { apiClient } from './axios';
-export const api = {
-  getStories: () => apiClient.get('/stories/'),
-  getStory: (id: string) => apiClient.get(`/stories/${id}/`),
-  login: (data: unknown) => apiClient.post('/auth/login/', data),
-  register: (data: unknown) => apiClient.post('/auth/register/', data)
-};
+export const API_BASE =
+  process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000";
+
+export const API_URL = `${API_BASE}/api`;

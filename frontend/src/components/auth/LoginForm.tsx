@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { API_URL } from "@/lib/api";
 
 export function LoginForm() {
   const router = useRouter();
@@ -20,7 +21,7 @@ export function LoginForm() {
     setLoading(true);
 
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/auth/login/", {
+      const res = await fetch(`${API_URL}/auth/login/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

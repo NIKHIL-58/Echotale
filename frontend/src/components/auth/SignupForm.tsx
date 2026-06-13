@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { CheckCircle2, Eye, EyeOff, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { API_URL } from "@/lib/api";
 
 export function SignupForm() {
   const router = useRouter();
@@ -53,7 +54,7 @@ export function SignupForm() {
     setLoading(true);
 
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/auth/register/", {
+      const res = await fetch(`${API_URL}/auth/register/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
