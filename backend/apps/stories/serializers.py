@@ -7,13 +7,19 @@ class StoryCreateSerializer(serializers.Serializer):
     description = serializers.CharField(required=False, allow_blank=True)
     category = serializers.CharField(required=False, allow_blank=True)
     tags = serializers.CharField(required=False, allow_blank=True)
-
-    cover_image = serializers.CharField(required=False, allow_blank=True)
-    audio_url = serializers.CharField(required=False, allow_blank=True)
-    book_url = serializers.CharField(required=False, allow_blank=True)
-
     duration = serializers.IntegerField(required=False)
     is_premium = serializers.BooleanField(required=False)
+
+
+def audio_part_to_dict(part):
+    return {
+        "part_number": part.part_number,
+        "title": part.title,
+        "audio_url": part.audio_url,
+        "text_preview": part.text_preview,
+        "duration_estimate": part.duration_estimate,
+        "created_at": part.created_at.isoformat() if part.created_at else None,
+    }
 
 
 def story_to_dict(story):
@@ -28,6 +34,7 @@ def story_to_dict(story):
         "cover_image": story.cover_image,
         "audio_url": story.audio_url,
         "book_url": story.book_url,
+        "audio_parts": [audio_part_to_dict(part) for part in story.audio_parts],
         "duration": story.duration,
         "rating": story.rating,
         "total_reviews": story.total_reviews,
@@ -35,5 +42,7 @@ def story_to_dict(story):
         "uploaded_by": story.uploaded_by,
         "is_premium": story.is_premium,
         "status": story.status,
+        "audio_status": story.audio_status,
+        "audio_error": story.audio_error,
         "created_at": story.created_at.isoformat() if story.created_at else None,
     }
