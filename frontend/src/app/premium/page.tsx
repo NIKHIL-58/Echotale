@@ -1,3 +1,4 @@
-export default function Page() {
-  return <main><h1>EchoTale premium</h1></main>;
-}
+import { AppLayout } from '@/components/layout/AppLayout';
+import { Button } from '@/components/ui/Button';
+const plans=[['Free','₹0','Limited stories and basic player'],['Monthly','₹499','Unlimited stories and offline listening'],['Annual','₹3999','Best value with all premium features']];
+export default function Page(){ return <AppLayout rightPanel={false}><section className="rounded-[32px] bg-gradient-to-br from-deep to-primary p-10 text-white"><h1 className="text-4xl font-bold">Unlock EchoTale Premium</h1><p className="mt-3 text-white/75">Unlimited stories, offline listening, premium voices, and early releases.</p></section><div className="mt-8 grid gap-5 md:grid-cols-3">{plans.map(([name,price,desc],i)=><div key={name} className="rounded-widget bg-white p-6 shadow-soft"><h2 className="text-xl font-bold">{name}</h2><p className="mt-4 text-3xl font-bold">{price}</p><p className="mt-3 text-textMuted">{desc}</p><Button className="mt-6 w-full" variant={i===0?'secondary':'primary'}>{i===0?'Current Plan':'Choose Plan'}</Button></div>)}</div></AppLayout> }

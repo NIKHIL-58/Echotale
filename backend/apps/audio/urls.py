@@ -1,4 +1,8 @@
 from django.urls import path
-from . import views
+from apps.audio import views
 
-urlpatterns = []
+urlpatterns = [
+    path('chapters/', views.chapters),
+    path('progress/', views.save_progress),
+    path('continue-listening/', views.continue_listening),
+]

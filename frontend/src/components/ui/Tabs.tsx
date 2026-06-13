@@ -1,3 +1,1 @@
-export default function Tabs() {
-  return <div>Tabs</div>;
-}
+export function Tabs({ tabs }: { tabs: string[] }) { return <div className="flex gap-2 overflow-x-auto">{tabs.map((tab,i)=><button key={tab} className={`rounded-full px-4 py-2 text-sm font-semibold ${i===0?'bg-primary text-white':'bg-white text-textMuted'}`}>{tab}</button>)}</div>; }

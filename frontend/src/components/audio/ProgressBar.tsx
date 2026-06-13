@@ -1,3 +1,1 @@
-export default function ProgressBar() {
-  return <div>ProgressBar</div>;
-}
+export function ProgressBar({value=50}:{value?:number}){ return <div className="h-2 w-full rounded-full bg-borderSoft"><div className="h-full rounded-full bg-primary" style={{width:`${value}%`}} /></div>; }

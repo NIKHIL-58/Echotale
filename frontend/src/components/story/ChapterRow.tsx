@@ -1,3 +1,2 @@
-export default function ChapterRow() {
-  return <div>ChapterRow</div>;
-}
+import { Play } from 'lucide-react';
+export function ChapterRow({ title, duration }: { title: string; duration: string }){ return <div className="flex items-center gap-4 rounded-card bg-white p-4 shadow-soft"><button className="grid h-10 w-10 place-items-center rounded-full bg-soft text-primary"><Play className="h-4 w-4"/></button><p className="flex-1 font-semibold">{title}</p><span className="text-sm text-textMuted">{duration}</span></div> }

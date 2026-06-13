@@ -1,3 +1,2 @@
-export default function QueueDrawer() {
-  return <div>QueueDrawer</div>;
-}
+import { stories } from '@/lib/mock-data';
+export function QueueDrawer(){ return <aside className="rounded-widget bg-white p-5 shadow-soft"><h3 className="font-bold">Queue</h3>{stories.slice(0,4).map((s)=><div className="mt-4 flex items-center gap-3" key={s.id}><img src={s.cover} className="h-12 w-12 rounded-lg object-cover"/><div><p className="text-sm font-bold">{s.title}</p><p className="text-xs text-textMuted">{s.author}</p></div></div>)}</aside> }

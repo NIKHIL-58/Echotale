@@ -1,3 +1,5 @@
-export default function BottomPlayer() {
-  return <div>BottomPlayer</div>;
-}
+'use client';
+import { ChevronUp, ListMusic, Pause, Play, Repeat, Shuffle, SkipBack, SkipForward, Volume2 } from 'lucide-react';
+import { usePlayerStore } from '@/store/playerStore';
+import { stories } from '@/lib/mock-data';
+export function BottomPlayer(){ const {track,isPlaying,togglePlay,toggleExpanded}=usePlayerStore(); const current=track || stories[0]; return <div className="fixed bottom-0 left-0 right-0 z-30 hidden h-[92px] items-center justify-between border-t border-borderSoft bg-white/90 px-8 shadow-card backdrop-blur lg:flex"><div className="flex w-72 items-center gap-4"><img src={current.cover} className="h-14 w-14 rounded-lg object-cover"/><div><p className="font-bold">{current.title}</p><p className="text-sm text-textMuted">by {current.author}</p></div></div><div className="flex items-center gap-6 text-textMain"><Shuffle className="h-5 w-5"/><SkipBack/><button onClick={togglePlay} className="grid h-14 w-14 place-items-center rounded-full bg-primary text-white shadow-soft">{isPlaying?<Pause/>:<Play/>}</button><SkipForward/><Repeat className="h-5 w-5"/></div><div className="flex w-[430px] items-center gap-5"><span className="text-xs text-textMuted">08:45 / 28:00</span><div className="h-1.5 flex-1 rounded-full bg-borderSoft"><div className="h-full w-1/2 rounded-full bg-primary"/></div><Volume2/><ListMusic/><button onClick={toggleExpanded} className="grid h-10 w-10 place-items-center rounded-full bg-white shadow-soft"><ChevronUp/></button></div></div> }

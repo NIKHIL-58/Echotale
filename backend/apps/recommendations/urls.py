@@ -1,4 +1,3 @@
 from django.urls import path
-from . import views
-
-urlpatterns = []
+from apps.recommendations import views
+urlpatterns=[path('', views.recommended), path('trending/', views.trending)]

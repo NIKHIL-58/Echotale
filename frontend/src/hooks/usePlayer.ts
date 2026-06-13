@@ -1,1 +1,1 @@
-export function placeholderHook() { return null; }
+export { usePlayerStore as usePlayer } from '@/store/playerStore';

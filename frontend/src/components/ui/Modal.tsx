@@ -1,3 +1,1 @@
-export default function Modal() {
-  return <div>Modal</div>;
-}
+export function Modal({ title, children }: { title: string; children: React.ReactNode }) { return <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4"><div className="w-full max-w-lg rounded-widget bg-white p-6 shadow-card"><h2 className="text-xl font-bold">{title}</h2><div className="mt-4">{children}</div></div></div>; }

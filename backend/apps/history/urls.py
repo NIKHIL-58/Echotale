@@ -1,4 +1,3 @@
 from django.urls import path
-from . import views
-
-urlpatterns = []
+from apps.history import views
+urlpatterns=[path('', views.history)]

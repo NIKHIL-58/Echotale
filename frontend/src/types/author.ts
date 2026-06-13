@@ -1,1 +1,1 @@
-export type Placeholder = Record<string, unknown>;
+export type Author = { id: string; name: string; avatar: string; bio?: string; };

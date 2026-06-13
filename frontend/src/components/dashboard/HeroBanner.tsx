@@ -1,3 +1,3 @@
-export default function HeroBanner() {
-  return <div>HeroBanner</div>;
-}
+import { ArrowRight } from 'lucide-react';
+import { Button } from '@/components/ui/Button';
+export function HeroBanner(){ return <section className="relative h-[280px] overflow-hidden rounded-widget bg-deep p-8 text-white shadow-soft"><img src="https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=1300&h=500&fit=crop" className="absolute inset-0 h-full w-full object-cover opacity-70"/><div className="absolute inset-0 bg-gradient-to-r from-deep via-deep/50 to-transparent"/><div className="relative z-10 max-w-md"><span className="rounded-full bg-white/10 px-3 py-1 text-xs">★ Editor's Pick</span><h1 className="mt-5 text-4xl font-bold leading-tight">Stories That Resonate</h1><p className="mt-4 text-lg">Listen. Feel. Remember.</p><Button className="mt-6 bg-white text-primary">Explore Now <ArrowRight className="ml-2 inline h-4 w-4"/></Button></div></section> }

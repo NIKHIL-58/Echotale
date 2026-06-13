@@ -1,3 +1,1 @@
-export default function VolumeControl() {
-  return <div>VolumeControl</div>;
-}
+import { Volume2 } from 'lucide-react'; export function VolumeControl(){ return <div className="flex items-center gap-2"><Volume2/><div className="h-1 w-24 rounded-full bg-borderSoft"><div className="h-full w-2/3 rounded-full bg-primary"/></div></div> }

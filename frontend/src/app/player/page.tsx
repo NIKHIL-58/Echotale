@@ -1,0 +1,1 @@
+import { AppLayout } from '@/components/layout/AppLayout'; import { ExpandedPlayer } from '@/components/audio/ExpandedPlayer'; export default function Page(){ return <AppLayout rightPanel={false}><ExpandedPlayer/></AppLayout> }

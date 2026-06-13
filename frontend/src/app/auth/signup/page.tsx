@@ -1,3 +1,12 @@
+import { AuthLayout } from "@/components/auth/AuthLayout";
+import { SignupForm } from "@/components/auth/SignupForm";
+
 export default function Page() {
-  return <main><h1>EchoTale signup</h1></main>;
+  return (
+    <AuthLayout
+      title="Start listening today"
+      >
+      <SignupForm />
+    </AuthLayout>
+  );
 }

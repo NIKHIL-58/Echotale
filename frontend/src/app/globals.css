@@ -1,10 +1,21 @@
-@import "../styles/tokens.css";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-primary: #6C4DF6;
+  --color-primary-soft: #EEE9FF;
+  --color-bg: #F7F8FC;
+  --color-text: #10142D;
+  --radius-card: 16px;
+  --radius-widget: 24px;
+  --shadow-soft: 0 12px 32px rgba(16,20,45,0.08);
+  --player-height: 92px;
+}
 
 * { box-sizing: border-box; }
-body {
-  margin: 0;
-  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background: var(--color-bg);
-  color: var(--color-text);
-}
+body { margin: 0; background: var(--color-bg); color: var(--color-text); font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
 a { color: inherit; text-decoration: none; }
+button, input, select, textarea { font: inherit; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: #d9d6f8; border-radius: 999px; }

@@ -1,3 +1,2 @@
-export default function ContinueListeningCard() {
-  return <div>ContinueListeningCard</div>;
-}
+import type { Story } from '@/types/story';
+export function ContinueListeningCard({ story }: { story: Story }){ return <div className="flex min-w-[210px] items-center gap-3 rounded-card bg-white p-3 shadow-soft"><img src={story.cover} className="h-[72px] w-14 rounded-lg object-cover"/><div className="flex-1"><h3 className="text-sm font-bold">{story.title}</h3><p className="text-xs text-textMuted">by {story.author}</p><div className="mt-3 flex items-center gap-2"><div className="h-1 flex-1 rounded-full bg-borderSoft"><div className="h-full rounded-full bg-primary" style={{width:`${story.progress}%`}}/></div><span className="text-xs font-semibold">{story.progress}%</span></div></div></div> }

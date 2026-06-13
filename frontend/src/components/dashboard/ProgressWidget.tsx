@@ -1,3 +1,1 @@
-export default function ProgressWidget() {
-  return <div>ProgressWidget</div>;
-}
+export function ProgressWidget(){ return <section className="rounded-widget bg-white p-6 shadow-soft"><h3 className="font-bold">Weekly Progress</h3><div className="mt-4 h-24 rounded-xl bg-gradient-to-t from-soft to-white"/></section> }

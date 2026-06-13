@@ -1,8 +1,9 @@
-import "./globals.css";
+import type { Metadata } from 'next';
+import './globals.css';
 
-export const metadata = {
-  title: "EchoTale",
-  description: "Audio storytelling dashboard",
+export const metadata: Metadata = {
+  title: 'EchoTale',
+  description: 'Audio storytelling platform'
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

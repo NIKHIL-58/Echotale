@@ -1,3 +1,6 @@
-export default function StoryCard() {
-  return <div>StoryCard</div>;
-}
+'use client';
+import Link from 'next/link';
+import { Play } from 'lucide-react';
+import type { Story } from '@/types/story';
+import { usePlayerStore } from '@/store/playerStore';
+export function StoryCard({ story }: { story: Story }){ const setTrack=usePlayerStore(s=>s.setTrack); return <div className="group relative h-[190px] min-w-[156px] overflow-hidden rounded-card shadow-soft"><img src={story.cover} className="absolute inset-0 h-full w-full object-cover transition group-hover:scale-105"/><div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"/><Link href={`/stories/${story.id}`} className="absolute inset-x-4 bottom-12 text-white"><h3 className="text-lg font-bold leading-tight">{story.title}</h3><p className="mt-1 text-xs">by {story.author}</p></Link><div className="absolute bottom-3 left-4 rounded-full bg-black/40 px-3 py-1 text-xs text-white">▶ {story.duration} min</div><button onClick={()=>setTrack({id:story.id,title:story.title,author:story.author,cover:story.cover,duration:story.duration*60})} className="absolute bottom-3 right-3 grid h-9 w-9 place-items-center rounded-full bg-white text-primary"><Play className="h-4 w-4"/></button></div> }

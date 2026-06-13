@@ -1,3 +1,1 @@
-export default function Page() {
-  return <main><h1>EchoTale reset-password</h1></main>;
-}
+import { AuthLayout } from '@/components/auth/AuthLayout'; import { Input } from '@/components/ui/Input'; import { Button } from '@/components/ui/Button'; export default function Page(){ return <AuthLayout title="Reset password"><div className="space-y-4"><Input type="password" placeholder="New password"/><Input type="password" placeholder="Confirm password"/><Button className="w-full">Update password</Button></div></AuthLayout> }

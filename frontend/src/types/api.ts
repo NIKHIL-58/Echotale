@@ -1,1 +1,1 @@
-export type Placeholder = Record<string, unknown>;
+export type ApiResponse<T> = { data: T; message?: string; };

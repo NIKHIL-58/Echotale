@@ -1,1 +1,1 @@
-export function placeholderHook() { return null; }
+export { useAuthStore as useAuth } from '@/store/authStore';

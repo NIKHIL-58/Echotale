@@ -1,3 +1,1 @@
-export default function Page() {
-  return <main><h1>EchoTale login</h1></main>;
-}
+import { AuthLayout } from '@/components/auth/AuthLayout'; import { LoginForm } from '@/components/auth/LoginForm'; export default function Page(){ return <AuthLayout title="Welcome back"><LoginForm/></AuthLayout> }

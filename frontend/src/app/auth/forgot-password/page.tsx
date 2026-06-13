@@ -1,3 +1,1 @@
-export default function Page() {
-  return <main><h1>EchoTale forgot-password</h1></main>;
-}
+import { AuthLayout } from '@/components/auth/AuthLayout'; import { Input } from '@/components/ui/Input'; import { Button } from '@/components/ui/Button'; export default function Page(){ return <AuthLayout title="Forgot password"><div className="space-y-4"><Input placeholder="Email address"/><Button className="w-full">Send reset link</Button></div></AuthLayout> }

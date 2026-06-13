@@ -1,3 +1,4 @@
-export default function Categories() {
-  return <div>Categories</div>;
-}
+import { Rocket, Heart, ShieldQuestion, Gem, Zap, Castle } from 'lucide-react';
+import { categories } from '@/lib/constants';
+const icons=[Rocket,Heart,ShieldQuestion,Gem,Zap,Castle];
+export function Categories(){ return <section className="mt-6"><div className="mb-4 flex justify-between"><h2 className="text-lg font-bold">Categories</h2><a className="text-sm text-primary" href="/explore">View all</a></div><div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">{categories.map((cat,i)=>{const Icon=icons[i]; return <a href={`/explore/${cat.toLowerCase()}`} key={cat} className="flex items-center gap-3 rounded-card bg-white p-4 shadow-soft"><span className="grid h-9 w-9 place-items-center rounded-full bg-soft text-primary"><Icon className="h-5 w-5"/></span><b className="text-sm">{cat}</b></a>})}</div></section> }

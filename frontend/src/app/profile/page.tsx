@@ -1,3 +1,3 @@
-export default function Page() {
-  return <main><h1>EchoTale profile</h1></main>;
-}
+import { AppLayout } from '@/components/layout/AppLayout';
+import { Button } from '@/components/ui/Button';
+export default function Page(){ return <AppLayout><section className="rounded-widget bg-white p-6 shadow-soft"><div className="flex items-center gap-5"><img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop" className="h-24 w-24 rounded-full object-cover"/><div><h1 className="text-3xl font-bold">Ananya</h1><p className="text-textMuted">12h 45m listened • 8 stories completed</p><Button className="mt-4">Edit Profile</Button></div></div></section><div className="mt-6 grid gap-4 md:grid-cols-3">{['Favorite Genres','Achievements','Listening Goals'].map(x=><div key={x} className="rounded-card bg-white p-5 shadow-soft"><h3 className="font-bold">{x}</h3><p className="mt-2 text-sm text-textMuted">Manage your {x.toLowerCase()}.</p></div>)}</div></AppLayout> }
