@@ -1,8 +1,10 @@
 import os
 import re
+import threading
 from datetime import datetime
-from apps.stories.models import StoryDocument, AudioPartDocument
+
 import fitz
+from bson import ObjectId
 from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
@@ -10,9 +12,9 @@ from openai import OpenAI
 from rest_framework.decorators import api_view, permission_classes, parser_classes
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from bson import ObjectId
+
 from common.response import success, error
-from apps.stories.models import StoryDocument
+from apps.stories.models import StoryDocument, AudioPartDocument
 from apps.stories.serializers import StoryCreateSerializer, story_to_dict
 
 
@@ -76,7 +78,6 @@ def extract_pdf_info(book_url, original_filename):
             return result
 
         doc = fitz.open(pdf_path)
-
         metadata = doc.metadata or {}
 
         meta_title = (metadata.get("title") or "").strip()
@@ -91,10 +92,9 @@ def extract_pdf_info(book_url, original_filename):
         all_text_parts = []
         first_text = ""
 
-        # Limit for now so upload is fast. Increase later if needed.
-        max_pages_for_audio = min(10, len(doc))
+        max_pages_for_preview = min(10, len(doc))
 
-        for page_index in range(max_pages_for_audio):
+        for page_index in range(max_pages_for_preview):
             page_text = doc[page_index].get_text("text").strip()
 
             if page_text:
@@ -121,9 +121,6 @@ def extract_pdf_info(book_url, original_filename):
 
         full_text = "\n\n".join(all_text_parts)
         full_text = re.sub(r"\s+", " ", full_text).strip()
-
-        # OpenAI TTS input should not be huge in one request.
-        # This creates an audio preview from the first pages.
         result["tts_text"] = full_text[:12000]
 
         if len(doc) > 0:
@@ -158,6 +155,7 @@ def extract_pdf_info(book_url, original_filename):
 
     return result
 
+
 def extract_pdf_full_text(book_url, max_pages=30):
     try:
         relative_path = book_url.replace(settings.MEDIA_URL, "", 1)
@@ -167,7 +165,6 @@ def extract_pdf_full_text(book_url, max_pages=30):
             return "", "PDF file not found on server."
 
         doc = fitz.open(pdf_path)
-
         text_parts = []
 
         for page_index in range(min(max_pages, len(doc))):
@@ -189,40 +186,36 @@ def extract_pdf_full_text(book_url, max_pages=30):
     except Exception as exc:
         return "", str(exc)
 
-def generate_audio_parts_from_text(text, title, max_parts=20):
-    chunks = split_text_for_audio(text, max_chars=4500)
 
-    if not chunks:
-        return [], "No text chunks created."
+def split_text_for_audio(text, max_chars=4500):
+    if not text:
+        return []
 
-    audio_parts = []
-    errors = []
+    text = re.sub(r"\s+", " ", text).strip()
+    sentences = re.split(r"(?<=[.!?])\s+", text)
 
-    for index, chunk in enumerate(chunks[:max_parts], start=1):
-        audio_url, audio_error = generate_audio_from_text(
-            text=chunk,
-            title=title,
-            part_number=index,
-        )
+    chunks = []
+    current = ""
 
-        if audio_url:
-            audio_parts.append(
-                AudioPartDocument(
-                    part_number=index,
-                    title=f"Part {index}",
-                    audio_url=audio_url,
-                    text_preview=chunk[:180],
-                    duration_estimate=5,
-                    created_at=datetime.utcnow(),
-                )
-            )
+    for sentence in sentences:
+        sentence = sentence.strip()
+
+        if not sentence:
+            continue
+
+        if len(current) + len(sentence) + 1 <= max_chars:
+            current = f"{current} {sentence}".strip()
         else:
-            errors.append(f"Part {index}: {audio_error}")
+            if current:
+                chunks.append(current)
 
-    if not audio_parts:
-        return [], "; ".join(errors) or "Audio generation failed."
+            current = sentence
 
-    return audio_parts, "; ".join(errors)
+    if current:
+        chunks.append(current)
+
+    return chunks
+
 
 def generate_audio_from_text(text, title, part_number=1):
     if not text:
@@ -265,41 +258,104 @@ def generate_audio_from_text(text, title, part_number=1):
         print("AUDIO PART GENERATION FAILED:", exc)
         return "", str(exc)
 
-def split_text_for_audio(text, max_chars=4500):
-    """
-    Split PDF text into small chunks.
-    Around 4000-4500 chars is usually safe for TTS limits.
-    Each chunk becomes one audio part.
-    """
 
-    if not text:
-        return []
+def generate_audio_parts_background(story_id, max_pages=30, max_parts=20):
+    try:
+        story = StoryDocument.objects(id=story_id).first()
 
-    text = re.sub(r"\s+", " ", text).strip()
+        if not story:
+            return
 
-    sentences = re.split(r"(?<=[.!?])\s+", text)
+        story.audio_status = "generating"
+        story.audio_error = ""
+        story.updated_at = datetime.utcnow()
+        story.save()
 
-    chunks = []
-    current = ""
+        full_pdf_text, text_error = extract_pdf_full_text(
+            story.book_url,
+            max_pages=max_pages,
+        )
 
-    for sentence in sentences:
-        sentence = sentence.strip()
+        if not full_pdf_text:
+            story.audio_status = "failed"
+            story.audio_error = text_error
+            story.updated_at = datetime.utcnow()
+            story.save()
+            return
 
-        if not sentence:
-            continue
+        chunks = split_text_for_audio(full_pdf_text, max_chars=4500)
 
-        if len(current) + len(sentence) + 1 <= max_chars:
-            current = f"{current} {sentence}".strip()
+        if not chunks:
+            story.audio_status = "failed"
+            story.audio_error = "No audio chunks created."
+            story.updated_at = datetime.utcnow()
+            story.save()
+            return
+
+        story.audio_parts = []
+        story.audio_url = ""
+        story.duration = 0
+        story.updated_at = datetime.utcnow()
+        story.save()
+
+        total_duration = 0
+
+        for index, chunk in enumerate(chunks[:max_parts], start=1):
+            audio_url, audio_error = generate_audio_from_text(
+                text=chunk,
+                title=story.title,
+                part_number=index,
+            )
+
+            if not audio_url:
+                story.audio_error = audio_error or f"Part {index} failed."
+                story.updated_at = datetime.utcnow()
+                story.save()
+                continue
+
+            duration_estimate = max(1, round(len(chunk.split()) / 150))
+
+            part = AudioPartDocument(
+                part_number=index,
+                title=f"Part {index}",
+                audio_url=audio_url,
+                text_preview=chunk[:180],
+                duration_estimate=duration_estimate,
+                created_at=datetime.utcnow(),
+            )
+
+            story.audio_parts.append(part)
+
+            if not story.audio_url:
+                story.audio_url = audio_url
+
+            total_duration += duration_estimate
+            story.duration = total_duration
+            story.audio_status = "generating"
+            story.updated_at = datetime.utcnow()
+            story.save()
+
+        if story.audio_parts:
+            story.audio_status = "generated"
+            story.audio_error = ""
         else:
-            if current:
-                chunks.append(current)
+            story.audio_status = "failed"
+            story.audio_error = story.audio_error or "No audio parts generated."
 
-            current = sentence
+        story.updated_at = datetime.utcnow()
+        story.save()
 
-    if current:
-        chunks.append(current)
+    except Exception as exc:
+        print("BACKGROUND AUDIO GENERATION FAILED:", exc)
 
-    return chunks
+        story = StoryDocument.objects(id=story_id).first()
+
+        if story:
+            story.audio_status = "failed"
+            story.audio_error = str(exc)
+            story.updated_at = datetime.utcnow()
+            story.save()
+
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
@@ -377,24 +433,6 @@ def create_story(request):
     if not cover_image:
         cover_image = pdf_info.get("cover_image", "")
 
-    full_pdf_text, text_error = extract_pdf_full_text(book_url, max_pages=30)
-
-    audio_parts = []
-    audio_url = ""
-    audio_error = ""
-
-    if full_pdf_text:
-        audio_parts, audio_error = generate_audio_parts_from_text(
-            text=full_pdf_text,
-            title=title,
-            max_parts=20,
-        )
-
-        if audio_parts:
-            audio_url = audio_parts[0].audio_url
-    else:
-        audio_error = text_error
-
     raw_tags = data.get("tags", "")
     tags = [tag.strip() for tag in raw_tags.split(",") if tag.strip()]
 
@@ -406,21 +444,31 @@ def create_story(request):
         category=category,
         tags=tags,
         cover_image=cover_image,
-        audio_url=audio_url,
+        audio_url="",
         book_url=book_url,
-        audio_parts=audio_parts,
-        duration=len(audio_parts) * 5,
+        audio_parts=[],
+        duration=0,
         is_premium=data.get("is_premium", False),
         uploaded_by=str(request.user.doc.id),
-        audio_status="generated" if audio_parts else "failed",
-        audio_error=audio_error,
+        audio_status="generating",
+        audio_error="",
         created_at=datetime.utcnow(),
         updated_at=datetime.utcnow(),
     )
 
     story.save()
 
-    return success(story_to_dict(story), "PDF story uploaded with audio", 201)
+    threading.Thread(
+        target=generate_audio_parts_background,
+        args=(str(story.id),),
+        daemon=True,
+    ).start()
+
+    return success(
+        story_to_dict(story),
+        "PDF story uploaded successfully. Audio generation has started.",
+        201,
+    )
 
 
 @api_view(["GET"])
@@ -434,6 +482,7 @@ def my_stories(request):
         [story_to_dict(story) for story in stories],
         "My stories fetched successfully",
     )
+
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
@@ -452,29 +501,21 @@ def regenerate_story_audio_parts(request, story_id):
     if not story.book_url:
         return error("This story does not have a PDF file.", 400)
 
-    full_pdf_text, text_error = extract_pdf_full_text(story.book_url, max_pages=30)
-
-    if not full_pdf_text:
-        story.audio_status = "failed"
-        story.audio_error = text_error
-        story.updated_at = datetime.utcnow()
-        story.save()
-
-        return error(text_error, 400)
-
-    audio_parts, audio_error = generate_audio_parts_from_text(
-        text=full_pdf_text,
-        title=story.title,
-        max_parts=20,
-    )
-
-    story.audio_parts = audio_parts
-    story.audio_url = audio_parts[0].audio_url if audio_parts else ""
-    story.duration = len(audio_parts) * 5
-    story.audio_status = "generated" if audio_parts else "failed"
-    story.audio_error = audio_error
+    story.audio_status = "generating"
+    story.audio_error = ""
+    story.audio_parts = []
+    story.audio_url = ""
+    story.duration = 0
     story.updated_at = datetime.utcnow()
     story.save()
 
-    return success(story_to_dict(story), "Audio parts generated successfully")
+    threading.Thread(
+        target=generate_audio_parts_background,
+        args=(str(story.id),),
+        daemon=True,
+    ).start()
 
+    return success(
+        story_to_dict(story),
+        "Audio regeneration has started.",
+    )
