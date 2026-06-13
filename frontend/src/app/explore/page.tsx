@@ -73,7 +73,7 @@ function ExploreContent() {
         </div>
 
         <Link
-          href="/upload"
+          href="/stories/upload"
           className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-semibold text-white"
         >
           <Plus size={18} />
