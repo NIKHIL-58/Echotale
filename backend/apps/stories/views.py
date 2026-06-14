@@ -1,19 +1,20 @@
 import os
 import re
+import tempfile
 import threading
 from datetime import datetime
 
 import fitz
+import requests
 from bson import ObjectId
 from django.conf import settings
-from django.core.files.base import ContentFile
-from django.core.files.storage import default_storage
 from openai import OpenAI
 from rest_framework.decorators import api_view, permission_classes, parser_classes
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from common.response import success, error
+from common.supabase_storage import upload_django_file, upload_bytes, upload_local_file
 from apps.stories.models import StoryDocument, AudioPartDocument
 from apps.stories.serializers import StoryCreateSerializer, story_to_dict
 
@@ -43,19 +44,28 @@ def save_uploaded_file(file_obj, folder):
     if not file_obj:
         return ""
 
-    safe_name = file_obj.name.replace(" ", "_")
-    safe_name = re.sub(r"[^a-zA-Z0-9._-]+", "_", safe_name)
+    return upload_django_file(file_obj, folder)
 
-    saved_path = default_storage.save(f"{folder}/{safe_name}", file_obj)
 
-    try:
-        full_path = default_storage.path(saved_path)
-        print("FILE SAVED:", full_path)
-        print("FILE EXISTS:", os.path.exists(full_path))
-    except Exception as exc:
-        print("FILE SAVE CHECK FAILED:", exc)
+def get_pdf_local_path(book_url):
+    """
+    Supabase stores the PDF as an HTTPS URL.
+    PyMuPDF needs a local file path, so we download the PDF temporarily.
+    """
+    if book_url.startswith("http"):
+        response = requests.get(book_url, timeout=120)
+        response.raise_for_status()
 
-    return f"{settings.MEDIA_URL}{saved_path}"
+        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
+        temp_file.write(response.content)
+        temp_file.close()
+
+        return temp_file.name, True
+
+    relative_path = book_url.replace(settings.MEDIA_URL, "", 1)
+    local_path = os.path.join(settings.MEDIA_ROOT, relative_path)
+
+    return local_path, False
 
 
 def extract_pdf_info(book_url, original_filename):
@@ -67,9 +77,12 @@ def extract_pdf_info(book_url, original_filename):
         "tts_text": "",
     }
 
+    pdf_path = ""
+    should_delete = False
+    doc = None
+
     try:
-        relative_path = book_url.replace(settings.MEDIA_URL, "", 1)
-        pdf_path = default_storage.path(relative_path)
+        pdf_path, should_delete = get_pdf_local_path(book_url)
 
         print("PDF PATH:", pdf_path)
         print("PDF EXISTS:", os.path.exists(pdf_path))
@@ -128,38 +141,45 @@ def extract_pdf_info(book_url, original_filename):
             safe_name = re.sub(r"[^a-zA-Z0-9_]+", "_", safe_name)
 
             timestamp = datetime.utcnow().strftime("%Y%m%d%H%M%S")
-            cover_relative_path = f"covers/{safe_name}_{timestamp}_cover.png"
+            cover_filename = f"{safe_name}_{timestamp}_cover.png"
 
             page = doc[0]
             pix = page.get_pixmap(matrix=fitz.Matrix(1.5, 1.5), alpha=False)
             png_bytes = pix.tobytes("png")
 
-            saved_cover_path = default_storage.save(
-                cover_relative_path,
-                ContentFile(png_bytes),
+            result["cover_image"] = upload_bytes(
+                file_bytes=png_bytes,
+                folder="covers",
+                filename=cover_filename,
+                content_type="image/png",
             )
-
-            result["cover_image"] = f"{settings.MEDIA_URL}{saved_cover_path}"
-
-            try:
-                cover_full_path = default_storage.path(saved_cover_path)
-                print("COVER SAVED:", cover_full_path)
-                print("COVER EXISTS:", os.path.exists(cover_full_path))
-            except Exception as exc:
-                print("COVER SAVE CHECK FAILED:", exc)
-
-        doc.close()
 
     except Exception as exc:
         print("PDF extraction failed:", exc)
 
+    finally:
+        if doc:
+            try:
+                doc.close()
+            except Exception:
+                pass
+
+        if should_delete and pdf_path and os.path.exists(pdf_path):
+            try:
+                os.remove(pdf_path)
+            except Exception:
+                pass
+
     return result
 
 
-def extract_pdf_full_text(book_url, max_pages=30):
+def extract_pdf_full_text(book_url, max_pages=100):
+    pdf_path = ""
+    should_delete = False
+    doc = None
+
     try:
-        relative_path = book_url.replace(settings.MEDIA_URL, "", 1)
-        pdf_path = default_storage.path(relative_path)
+        pdf_path, should_delete = get_pdf_local_path(book_url)
 
         if not os.path.exists(pdf_path):
             return "", "PDF file not found on server."
@@ -173,8 +193,6 @@ def extract_pdf_full_text(book_url, max_pages=30):
             if page_text:
                 text_parts.append(page_text)
 
-        doc.close()
-
         full_text = "\n\n".join(text_parts)
         full_text = re.sub(r"\s+", " ", full_text).strip()
 
@@ -185,6 +203,19 @@ def extract_pdf_full_text(book_url, max_pages=30):
 
     except Exception as exc:
         return "", str(exc)
+
+    finally:
+        if doc:
+            try:
+                doc.close()
+            except Exception:
+                pass
+
+        if should_delete and pdf_path and os.path.exists(pdf_path):
+            try:
+                os.remove(pdf_path)
+            except Exception:
+                pass
 
 
 def split_text_for_audio(text, max_chars=4500):
@@ -224,18 +255,20 @@ def generate_audio_from_text(text, title, part_number=1):
     if not settings.OPENAI_API_KEY:
         return "", "OPENAI_API_KEY is missing."
 
+    audio_full_path = ""
+
     try:
         client = OpenAI(api_key=settings.OPENAI_API_KEY)
 
         safe_title = re.sub(r"[^a-zA-Z0-9_]+", "_", title)[:70]
         timestamp = datetime.utcnow().strftime("%Y%m%d%H%M%S")
 
-        audio_relative_path = (
-            f"audio/{safe_title}_part_{part_number}_{timestamp}.mp3"
-        )
+        audio_filename = f"{safe_title}_part_{part_number}_{timestamp}.mp3"
 
-        audio_full_path = os.path.join(settings.MEDIA_ROOT, audio_relative_path)
-        os.makedirs(os.path.dirname(audio_full_path), exist_ok=True)
+        temp_audio_dir = os.path.join(tempfile.gettempdir(), "echotale_audio")
+        os.makedirs(temp_audio_dir, exist_ok=True)
+
+        audio_full_path = os.path.join(temp_audio_dir, audio_filename)
 
         speech_text = text[:4500].strip()
 
@@ -249,17 +282,31 @@ def generate_audio_from_text(text, title, part_number=1):
         ) as response:
             response.stream_to_file(audio_full_path)
 
-        print("AUDIO PART SAVED:", audio_full_path)
+        print("AUDIO PART SAVED TEMP:", audio_full_path)
         print("AUDIO PART EXISTS:", os.path.exists(audio_full_path))
 
-        return f"{settings.MEDIA_URL}{audio_relative_path}", ""
+        audio_url = upload_local_file(
+            audio_full_path,
+            "audio",
+            filename=audio_filename,
+            content_type="audio/mpeg",
+        )
+
+        return audio_url, ""
 
     except Exception as exc:
         print("AUDIO PART GENERATION FAILED:", exc)
         return "", str(exc)
 
+    finally:
+        if audio_full_path and os.path.exists(audio_full_path):
+            try:
+                os.remove(audio_full_path)
+            except Exception:
+                pass
 
-def generate_audio_parts_background(story_id, max_pages=30, max_parts=20):
+
+def generate_audio_parts_background(story_id, max_pages=100, max_parts=80):
     try:
         story = StoryDocument.objects(id=story_id).first()
 
