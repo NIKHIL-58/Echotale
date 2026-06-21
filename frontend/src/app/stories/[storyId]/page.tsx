@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Badge } from "@/components/ui/Badge";
 import { usePlayerStore } from "@/store/playerStore";
+import { addToHistory } from "@/lib/userLists";
 import {
   getMediaUrl,
   getStory,
@@ -26,8 +27,6 @@ export default function StoryDetailPage() {
   const params = useParams();
   const storyId = params.storyId as string;
 
-  const setTrack = usePlayerStore((state) => state.setTrack);
-
   const [story, setStory] = useState<Story | null>(null);
   const [selectedPart, setSelectedPart] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -35,23 +34,24 @@ export default function StoryDetailPage() {
   const [error, setError] = useState("");
 
   async function loadStory(showLoader = true) {
-    try {
-      if (showLoader) {
-        setLoading(true);
-      }
+  try {
+    if (showLoader) {
+      setLoading(true);
+    }
 
-      setError("");
+    setError("");
 
-      const data = await getStory(storyId);
-      setStory(data);
-    } catch {
-      setError("Unable to load story.");
-    } finally {
-      if (showLoader) {
-        setLoading(false);
-      }
+    const data = await getStory(storyId);
+    setStory(data);
+    addToHistory(data);
+  } catch {
+    setError("Unable to load story.");
+  } finally {
+    if (showLoader) {
+      setLoading(false);
     }
   }
+}
 
   async function handleGenerateAudioParts() {
     try {
@@ -159,10 +159,13 @@ export default function StoryDetailPage() {
           <div className="overflow-hidden rounded-[28px] bg-soft">
             {coverUrl ? (
               <img
-                src={coverUrl}
-                alt={story.title}
-                className="h-[420px] w-full object-cover"
-              />
+                  src={coverUrl}
+                  alt={story.title}
+                  className="h-[420px] w-full object-cover"
+                  onError={(event) => {
+                    event.currentTarget.style.display = "none";
+                  }}
+                />
             ) : (
               <div className="grid h-[420px] place-items-center bg-gradient-to-br from-[#2B1B7A] to-[#A855F7] text-white">
                 <BookOpen size={64} />

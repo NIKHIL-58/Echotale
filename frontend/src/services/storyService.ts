@@ -35,16 +35,15 @@ export type Story = {
 
 export function getMediaUrl(path?: string) {
   if (!path) return "";
-
-  if (path.startsWith("http")) {
-    return path;
-  }
-
+  if (path.startsWith("http")) return path;
   return `${API_BASE}${path}`;
 }
 
 export async function getStories(): Promise<Story[]> {
-  const res = await fetch(`${API_URL}/stories/`);
+  const res = await fetch(`${API_URL}/stories/`, {
+    cache: "no-store",
+  });
+
   const data = await res.json();
 
   if (!res.ok || !data.success) {
@@ -55,7 +54,10 @@ export async function getStories(): Promise<Story[]> {
 }
 
 export async function getStory(id: string): Promise<Story> {
-  const res = await fetch(`${API_URL}/stories/${id}/`);
+  const res = await fetch(`${API_URL}/stories/${id}/`, {
+    cache: "no-store",
+  });
+
   const data = await res.json();
 
   if (!res.ok || !data.success) {
@@ -63,6 +65,26 @@ export async function getStory(id: string): Promise<Story> {
   }
 
   return data.data;
+}
+
+export async function getAudiobooks(): Promise<Story[]> {
+  const stories = await getStories();
+
+  return stories.filter((story) => {
+    return (
+      story.audio_status === "generated" ||
+      story.audio_url ||
+      (story.audio_parts && story.audio_parts.length > 0)
+    );
+  });
+}
+
+export async function getPodcasts(): Promise<Story[]> {
+  const stories = await getStories();
+
+  return stories.filter((story) => {
+    return story.category?.toLowerCase() === "podcast";
+  });
 }
 
 export async function createStory(formData: FormData) {
