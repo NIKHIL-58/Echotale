@@ -47,6 +47,7 @@ class StoryDocument(Document):
 
     audio_status = StringField(default="not_generated")
     audio_error = StringField(default="")
+    voice = StringField(default="alloy")
 
     created_at = DateTimeField(default=datetime.utcnow)
     updated_at = DateTimeField(default=datetime.utcnow)

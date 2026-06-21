@@ -194,7 +194,7 @@ def extract_pdf_full_text(book_url, max_pages=100):
                 text_parts.append(page_text)
 
         full_text = "\n\n".join(text_parts)
-        full_text = re.sub(r"\s+", " ", full_text).strip()
+        full_text = clean_text_for_tts(full_text)
 
         if not full_text:
             return "", "No readable text found in PDF."
@@ -248,7 +248,7 @@ def split_text_for_audio(text, max_chars=4500):
     return chunks
 
 
-def generate_audio_from_text(text, title, part_number=1):
+def generate_audio_from_text(text, title, part_number=1, voice="alloy"):
     if not text:
         return "", "No text found inside PDF."
 
@@ -277,7 +277,7 @@ def generate_audio_from_text(text, title, part_number=1):
 
         with client.audio.speech.with_streaming_response.create(
             model="gpt-4o-mini-tts",
-            voice="alloy",
+            voice=voice,
             input=speech_text,
         ) as response:
             response.stream_to_file(audio_full_path)
@@ -352,6 +352,7 @@ def generate_audio_parts_background(story_id, max_pages=100, max_parts=80):
                 text=chunk,
                 title=story.title,
                 part_number=index,
+                voice=getattr(story, "voice", "alloy") or "alloy",
             )
 
             if not audio_url:
@@ -502,6 +503,23 @@ def create_story(request):
         created_at=datetime.utcnow(),
         updated_at=datetime.utcnow(),
     )
+    voice = data.get("voice") or "alloy"
+
+    allowed_voices = [
+        "alloy",
+        "ash",
+        "ballad",
+        "coral",
+        "echo",
+        "fable",
+        "nova",
+        "onyx",
+        "sage",
+        "shimmer",
+    ]
+
+    if voice not in allowed_voices:
+        voice = "alloy"
 
     story.save()
 
@@ -566,3 +584,51 @@ def regenerate_story_audio_parts(request, story_id):
         story_to_dict(story),
         "Audio regeneration has started.",
     )
+
+def clean_text_for_tts(text):
+    if not text:
+        return ""
+
+    text = text.replace("\r", "\n")
+
+    lines = []
+    skip_patterns = [
+        r"learn english through story",
+        r"level\s*\d+[-–]\d+",
+        r"hope you have enjoyed the reading",
+        r"come back to",
+        r"https?://",
+        r"www\.",
+        r"find more fascinating",
+        r"courtesy:",
+        r"shahid riaz",
+        r"islamabad",
+        r"gmail\.com",
+        r"oceanofpdf",
+    ]
+
+    for line in text.splitlines():
+        clean_line = line.strip()
+
+        if not clean_line:
+            continue
+
+        lower_line = clean_line.lower()
+
+        should_skip = any(
+            re.search(pattern, lower_line)
+            for pattern in skip_patterns
+        )
+
+        if should_skip:
+            continue
+
+        lines.append(clean_line)
+
+    cleaned = "\n".join(lines)
+    cleaned = re.sub(r"https?://\S+", "", cleaned)
+    cleaned = re.sub(r"www\.\S+", "", cleaned)
+    cleaned = re.sub(r"\s+", " ", cleaned).strip()
+
+    return cleaned
+

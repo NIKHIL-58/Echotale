@@ -9,6 +9,7 @@ class StoryCreateSerializer(serializers.Serializer):
     tags = serializers.CharField(required=False, allow_blank=True)
     duration = serializers.IntegerField(required=False)
     is_premium = serializers.BooleanField(required=False)
+    voice = serializers.CharField(required=False, allow_blank=True)
 
 
 def audio_part_to_dict(part):
@@ -44,5 +45,6 @@ def story_to_dict(story):
         "status": story.status,
         "audio_status": story.audio_status,
         "audio_error": story.audio_error,
+        "voice": getattr(story, "voice", "alloy"),
         "created_at": story.created_at.isoformat() if story.created_at else None,
     }

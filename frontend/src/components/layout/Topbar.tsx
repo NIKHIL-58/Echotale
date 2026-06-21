@@ -2,10 +2,19 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Bell, ChevronDown, LogOut, Search, User } from "lucide-react";
+import {
+  Bell,
+  BookOpen,
+  ChevronDown,
+  Clock3,
+  LogOut,
+  Search,
+  User,
+} from "lucide-react";
 import { getStoredUser, getToken, logoutUser } from "@/lib/auth";
 import { getMediaUrl } from "@/services/storyService";
 import { API_URL } from "@/lib/api";
+import { getHistory } from "@/lib/userLists";
 
 type AuthUser = {
   id: string;
@@ -19,13 +28,23 @@ type AuthUser = {
   listening_goal?: number;
 };
 
+type NotificationItem = {
+  id: string;
+  title: string;
+  message: string;
+  time: string;
+  icon: "bell" | "book" | "clock";
+};
+
 export function Topbar() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
   const [user, setUser] = useState<AuthUser | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [notificationOpen, setNotificationOpen] = useState(false);
   const [query, setQuery] = useState(searchParams.get("search") || "");
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
 
   useEffect(() => {
     setQuery(searchParams.get("search") || "");
@@ -64,6 +83,40 @@ export function Topbar() {
     fetchProfile();
   }, []);
 
+  useEffect(() => {
+    function loadNotifications() {
+      const history = getHistory();
+
+      const items: NotificationItem[] = [
+        {
+          id: "welcome",
+          title: "Welcome to EchoTale",
+          message: "Upload PDFs and listen to AI-generated audiobooks.",
+          time: "Now",
+          icon: "bell",
+        },
+      ];
+
+      if (history.length > 0) {
+        items.unshift({
+          id: "history",
+          title: "Continue listening",
+          message: `You recently opened ${history[0].title}.`,
+          time: "Recent",
+          icon: "clock",
+        });
+      }
+
+      setNotifications(items);
+    }
+
+    loadNotifications();
+
+    const interval = setInterval(loadNotifications, 5000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   function handleSearchSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -75,6 +128,12 @@ export function Topbar() {
     }
 
     router.push(`/explore?search=${encodeURIComponent(cleanQuery)}`);
+  }
+
+  function renderNotificationIcon(type: NotificationItem["icon"]) {
+    if (type === "book") return <BookOpen size={18} />;
+    if (type === "clock") return <Clock3 size={18} />;
+    return <Bell size={18} />;
   }
 
   const displayName = user?.name || "User";
@@ -100,14 +159,67 @@ export function Topbar() {
       <div className="relative flex items-center gap-5">
         <button
           type="button"
-          className="grid h-11 w-11 place-items-center rounded-full bg-white text-[#10142D] shadow-sm hover:bg-[#EEE9FF]"
+          onClick={() => {
+            setNotificationOpen((prev) => !prev);
+            setMenuOpen(false);
+          }}
+          className="relative grid h-11 w-11 place-items-center rounded-full bg-white text-[#10142D] shadow-sm hover:bg-[#EEE9FF]"
         >
           <Bell size={22} />
+
+          {notifications.length > 0 && (
+            <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white" />
+          )}
         </button>
+
+        {notificationOpen && (
+          <div className="absolute right-24 top-16 z-50 w-80 rounded-3xl border border-[#EAECF0] bg-white p-3 shadow-[0_18px_50px_rgba(16,20,45,0.15)]">
+            <div className="border-b border-[#EAECF0] px-3 py-3">
+              <p className="font-bold text-[#10142D]">Notifications</p>
+              <p className="mt-1 text-sm text-[#667085]">
+                Latest updates from EchoTale
+              </p>
+            </div>
+
+            {notifications.length === 0 ? (
+              <div className="px-3 py-6 text-center text-sm text-[#667085]">
+                No notifications yet.
+              </div>
+            ) : (
+              <div className="mt-2 space-y-2">
+                {notifications.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex gap-3 rounded-2xl px-3 py-3 hover:bg-[#EEE9FF]"
+                  >
+                    <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#EEE9FF] text-[#6C4DF6]">
+                      {renderNotificationIcon(item.icon)}
+                    </div>
+
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold text-[#10142D]">
+                        {item.title}
+                      </p>
+                      <p className="mt-1 line-clamp-2 text-xs text-[#667085]">
+                        {item.message}
+                      </p>
+                      <p className="mt-1 text-[11px] font-semibold text-[#6C4DF6]">
+                        {item.time}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         <button
           type="button"
-          onClick={() => setMenuOpen((prev) => !prev)}
+          onClick={() => {
+            setMenuOpen((prev) => !prev);
+            setNotificationOpen(false);
+          }}
           className="flex items-center gap-3 rounded-2xl px-2 py-2 hover:bg-white"
         >
           <div className="grid h-12 w-12 place-items-center overflow-hidden rounded-full bg-[#EEE9FF] text-[#6C4DF6]">
@@ -116,6 +228,9 @@ export function Topbar() {
                 src={avatarUrl}
                 alt={displayName}
                 className="h-full w-full object-cover"
+                onError={(event) => {
+                  event.currentTarget.style.display = "none";
+                }}
               />
             ) : (
               <User size={24} />
