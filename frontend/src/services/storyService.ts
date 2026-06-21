@@ -31,6 +31,7 @@ export type Story = {
   is_premium: boolean;
   audio_status?: string;
   audio_error?: string;
+  voice?: string;
 };
 
 export function getMediaUrl(path?: string) {
@@ -73,8 +74,8 @@ export async function getAudiobooks(): Promise<Story[]> {
   return stories.filter((story) => {
     return (
       story.audio_status === "generated" ||
-      story.audio_url ||
-      (story.audio_parts && story.audio_parts.length > 0)
+      !!story.audio_url ||
+      !!(story.audio_parts && story.audio_parts.length > 0)
     );
   });
 }
@@ -111,7 +112,7 @@ export async function createStory(formData: FormData) {
   return data.data;
 }
 
-export async function regenerateAudioParts(storyId: string) {
+export async function regenerateAudioParts(storyId: string, voice = "alloy") {
   const token = localStorage.getItem("access_token");
 
   if (!token) {
@@ -124,7 +125,9 @@ export async function regenerateAudioParts(storyId: string) {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
       },
+      body: JSON.stringify({ voice }),
     }
   );
 

@@ -11,6 +11,7 @@ import {
   ImageIcon,
   Loader2,
   Upload,
+  Volume2,
 } from "lucide-react";
 
 export default function UploadStoryPage() {
@@ -21,6 +22,7 @@ export default function UploadStoryPage() {
   const [audioFile, setAudioFile] = useState<File | null>(null);
 
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [voice, setVoice] = useState("alloy");
 
   const [form, setForm] = useState({
     title: "",
@@ -65,6 +67,7 @@ export default function UploadStoryPage() {
       formData.append("category", form.category);
       formData.append("duration", form.duration || "0");
       formData.append("tags", form.tags);
+      formData.append("voice", voice);
 
       await createStory(formData);
 
@@ -84,8 +87,8 @@ export default function UploadStoryPage() {
             Upload PDF Story
           </h1>
           <p className="mt-2 text-textMuted">
-            Upload only a PDF. EchoTale will automatically detect the title,
-            author, description, and cover preview when possible.
+            Upload a PDF and choose the audiobook voice. EchoTale will detect
+            the title, author, description, and cover preview when possible.
           </p>
         </div>
 
@@ -127,6 +130,36 @@ export default function UploadStoryPage() {
             )}
           </label>
 
+          <div className="rounded-[24px] bg-page p-5">
+            <div className="mb-3 flex items-center gap-2">
+              <Volume2 className="text-primary" size={20} />
+              <label className="block font-bold text-textMain">
+                Choose Audio Voice
+              </label>
+            </div>
+
+            <select
+              value={voice}
+              onChange={(event) => setVoice(event.target.value)}
+              className="h-12 w-full rounded-2xl border border-borderSoft bg-white px-4 font-semibold text-textMain outline-none focus:border-primary"
+            >
+              <option value="alloy">Alloy - Neutral</option>
+              <option value="ash">Ash - Male</option>
+              <option value="echo">Echo - Male</option>
+              <option value="onyx">Onyx - Deep Male</option>
+              <option value="nova">Nova - Female</option>
+              <option value="shimmer">Shimmer - Female</option>
+              <option value="coral">Coral - Female</option>
+              <option value="fable">Fable - Story Style</option>
+              <option value="sage">Sage - Calm</option>
+              <option value="ballad">Ballad - Narration</option>
+            </select>
+
+            <p className="mt-2 text-sm text-textMuted">
+              This voice will be used when EchoTale generates the audiobook.
+            </p>
+          </div>
+
           <label className="flex items-start gap-3 rounded-2xl bg-yellow-50 p-4 text-sm text-yellow-800">
             <input
               type="checkbox"
@@ -145,7 +178,9 @@ export default function UploadStoryPage() {
             onClick={() => setShowAdvanced((prev) => !prev)}
             className="rounded-2xl bg-page px-5 py-3 font-bold text-primary hover:bg-soft"
           >
-            {showAdvanced ? "Hide optional fields" : "Optional: Add audio, cover, or edit details"}
+            {showAdvanced
+              ? "Hide optional fields"
+              : "Optional: Add audio, cover, or edit details"}
           </button>
 
           {showAdvanced && (
@@ -213,6 +248,7 @@ export default function UploadStoryPage() {
                     className="h-12 w-full rounded-2xl border border-borderSoft px-4 outline-none focus:border-primary"
                   >
                     <option>Book</option>
+                    <option>Podcast</option>
                     <option>Adventure</option>
                     <option>Romance</option>
                     <option>Mystery</option>
@@ -308,7 +344,7 @@ export default function UploadStoryPage() {
           <button
             type="submit"
             disabled={loading}
-            className="inline-flex h-[54px] w-full items-center justify-center gap-2 rounded-2xl bg-primary font-bold text-white shadow-[0_12px_28px_rgba(108,77,246,0.25)]"
+            className="inline-flex h-[54px] w-full items-center justify-center gap-2 rounded-2xl bg-primary font-bold text-white shadow-[0_12px_28px_rgba(108,77,246,0.25)] disabled:opacity-70"
           >
             {loading ? (
               <>
@@ -327,3 +363,4 @@ export default function UploadStoryPage() {
     </AppLayout>
   );
 }
+

@@ -19,6 +19,29 @@ from apps.stories.models import StoryDocument, AudioPartDocument
 from apps.stories.serializers import StoryCreateSerializer, story_to_dict
 
 
+ALLOWED_VOICES = [
+    "alloy",
+    "ash",
+    "ballad",
+    "coral",
+    "echo",
+    "fable",
+    "nova",
+    "onyx",
+    "sage",
+    "shimmer",
+]
+
+
+def normalize_voice(voice):
+    voice = (voice or "alloy").strip()
+
+    if voice not in ALLOWED_VOICES:
+        return "alloy"
+
+    return voice
+
+
 def make_slug(title):
     slug = re.sub(r"[^a-zA-Z0-9]+", "-", title.lower()).strip("-")
     slug = slug or "story"
@@ -36,8 +59,132 @@ def make_slug(title):
 def clean_filename_title(filename):
     name = os.path.splitext(filename)[0]
     name = name.replace("_", " ").replace("-", " ")
+    name = re.sub(r"\bbook\b", "", name, flags=re.IGNORECASE)
+    name = re.sub(r"\bpdf\b", "", name, flags=re.IGNORECASE)
     name = re.sub(r"\s+", " ", name).strip()
     return name.title() or "Untitled Story"
+
+
+def clean_story_title(title, original_filename=""):
+    title = (title or "").strip()
+
+    bad_titles = [
+        "learn english through story",
+        "short story",
+        "untitled story",
+    ]
+
+    lower_title = title.lower()
+
+    if lower_title in bad_titles or "learn english through story" in lower_title:
+        filename_title = clean_filename_title(original_filename)
+
+        if "last leaf" in filename_title.lower():
+            return "The Last Leaf"
+
+        return filename_title or "Untitled Story"
+
+    title = re.sub(r"learn english through story", "", title, flags=re.IGNORECASE)
+    title = re.sub(r"level\s*\d+[-–]\d+", "", title, flags=re.IGNORECASE)
+    title = re.sub(r"https?://\S+", "", title)
+    title = re.sub(r"www\.\S+", "", title)
+    title = re.sub(r"\s+", " ", title).strip()
+
+    return title or clean_filename_title(original_filename)
+
+
+def clean_story_description(description):
+    if not description:
+        return ""
+
+    text = description.replace("\r", "\n")
+
+    remove_patterns = [
+        r"learn english through story",
+        r"level\s*\d+[-–]\d+",
+        r"hope you have enjoyed the reading",
+        r"come back to.*",
+        r"https?://\S+",
+        r"www\.\S+",
+        r"find more fascinating.*",
+    ]
+
+    for pattern in remove_patterns:
+        text = re.sub(pattern, "", text, flags=re.IGNORECASE)
+
+    text = re.sub(r"\s+", " ", text).strip()
+
+    markers = [
+        "In a little district",
+        "One dollar and eighty-seven cents",
+        "When we were children",
+        "I became what I am today",
+    ]
+
+    for marker in markers:
+        index = text.lower().find(marker.lower())
+        if index != -1:
+            text = text[index:]
+            break
+
+    return text.strip()
+
+
+def clean_text_for_tts(text):
+    if not text:
+        return ""
+
+    text = text.replace("\r", "\n")
+
+    lines = []
+    skip_patterns = [
+        r"learn english through story",
+        r"level\s*\d+[-–]\d+",
+        r"hope you have enjoyed the reading",
+        r"come back to",
+        r"https?://",
+        r"www\.",
+        r"find more fascinating",
+        r"courtesy:",
+        r"shahid riaz",
+        r"islamabad",
+        r"gmail\.com",
+        r"oceanofpdf",
+    ]
+
+    for line in text.splitlines():
+        clean_line = line.strip()
+
+        if not clean_line:
+            continue
+
+        lower_line = clean_line.lower()
+
+        if any(re.search(pattern, lower_line) for pattern in skip_patterns):
+            continue
+
+        lines.append(clean_line)
+
+    cleaned = "\n".join(lines)
+
+    start_markers = [
+        "In a little district",
+        "One dollar and eighty-seven cents",
+        "When we were children",
+        "I became what I am today",
+    ]
+
+    for marker in start_markers:
+        index = cleaned.lower().find(marker.lower())
+        if index != -1:
+            cleaned = cleaned[index:]
+            break
+
+    cleaned = re.sub(r"https?://\S+", "", cleaned)
+    cleaned = re.sub(r"www\.\S+", "", cleaned)
+    cleaned = re.sub(r"\s+", " ", cleaned).strip()
+
+    return cleaned
 
 
 def save_uploaded_file(file_obj, folder):
@@ -48,10 +195,6 @@ def save_uploaded_file(file_obj, folder):
 
 
 def get_pdf_local_path(book_url):
-    """
-    Supabase stores the PDF as an HTTPS URL.
-    PyMuPDF needs a local file path, so we download the PDF temporarily.
-    """
     if book_url.startswith("http"):
         response = requests.get(book_url, timeout=120)
         response.raise_for_status()
@@ -121,6 +264,7 @@ def extract_pdf_info(book_url, original_filename):
 
             if not meta_title and lines:
                 possible_title = lines[0]
+
                 if len(possible_title) <= 120:
                     result["title"] = possible_title
 
@@ -130,11 +274,10 @@ def extract_pdf_info(book_url, original_filename):
                         result["author"] = line[3:].strip() or "Unknown Author"
                         break
 
-            result["description"] = first_text[:700]
+            result["description"] = first_text[:1200]
 
         full_text = "\n\n".join(all_text_parts)
-        full_text = re.sub(r"\s+", " ", full_text).strip()
-        result["tts_text"] = full_text[:12000]
+        result["tts_text"] = clean_text_for_tts(full_text)[:12000]
 
         if len(doc) > 0:
             safe_name = os.path.splitext(original_filename.replace(" ", "_"))[0]
@@ -277,7 +420,7 @@ def generate_audio_from_text(text, title, part_number=1, voice="alloy"):
 
         with client.audio.speech.with_streaming_response.create(
             model="gpt-4o-mini-tts",
-            voice=voice,
+            voice=normalize_voice(voice),
             input=speech_text,
         ) as response:
             response.stream_to_file(audio_full_path)
@@ -346,13 +489,14 @@ def generate_audio_parts_background(story_id, max_pages=100, max_parts=80):
         story.save()
 
         total_duration = 0
+        voice = normalize_voice(getattr(story, "voice", "alloy"))
 
         for index, chunk in enumerate(chunks[:max_parts], start=1):
             audio_url, audio_error = generate_audio_from_text(
                 text=chunk,
                 title=story.title,
                 part_number=index,
-                voice=getattr(story, "voice", "alloy") or "alloy",
+                voice=voice,
             )
 
             if not audio_url:
@@ -473,9 +617,12 @@ def create_story(request):
     if book_file.name.lower().endswith(".pdf"):
         pdf_info = extract_pdf_info(book_url, book_file.name)
 
-    title = data.get("title") or pdf_info.get("title") or clean_filename_title(book_file.name)
+    raw_title = data.get("title") or pdf_info.get("title") or clean_filename_title(book_file.name)
+    raw_description = data.get("description") or pdf_info.get("description") or ""
+
+    title = clean_story_title(raw_title, book_file.name)
     author = data.get("author") or pdf_info.get("author") or "Unknown Author"
-    description = data.get("description") or pdf_info.get("description") or ""
+    description = clean_story_description(raw_description)
     category = data.get("category") or "Book"
 
     if not cover_image:
@@ -483,6 +630,8 @@ def create_story(request):
 
     raw_tags = data.get("tags", "")
     tags = [tag.strip() for tag in raw_tags.split(",") if tag.strip()]
+
+    voice = normalize_voice(data.get("voice") or "alloy")
 
     story = StoryDocument(
         title=title,
@@ -500,26 +649,10 @@ def create_story(request):
         uploaded_by=str(request.user.doc.id),
         audio_status="generating",
         audio_error="",
+        voice=voice,
         created_at=datetime.utcnow(),
         updated_at=datetime.utcnow(),
     )
-    voice = data.get("voice") or "alloy"
-
-    allowed_voices = [
-        "alloy",
-        "ash",
-        "ballad",
-        "coral",
-        "echo",
-        "fable",
-        "nova",
-        "onyx",
-        "sage",
-        "shimmer",
-    ]
-
-    if voice not in allowed_voices:
-        voice = "alloy"
 
     story.save()
 
@@ -566,6 +699,9 @@ def regenerate_story_audio_parts(request, story_id):
     if not story.book_url:
         return error("This story does not have a PDF file.", 400)
 
+    story.voice = normalize_voice(
+        request.data.get("voice") or getattr(story, "voice", "alloy")
+    )
     story.audio_status = "generating"
     story.audio_error = ""
     story.audio_parts = []
@@ -584,51 +720,3 @@ def regenerate_story_audio_parts(request, story_id):
         story_to_dict(story),
         "Audio regeneration has started.",
     )
-
-def clean_text_for_tts(text):
-    if not text:
-        return ""
-
-    text = text.replace("\r", "\n")
-
-    lines = []
-    skip_patterns = [
-        r"learn english through story",
-        r"level\s*\d+[-–]\d+",
-        r"hope you have enjoyed the reading",
-        r"come back to",
-        r"https?://",
-        r"www\.",
-        r"find more fascinating",
-        r"courtesy:",
-        r"shahid riaz",
-        r"islamabad",
-        r"gmail\.com",
-        r"oceanofpdf",
-    ]
-
-    for line in text.splitlines():
-        clean_line = line.strip()
-
-        if not clean_line:
-            continue
-
-        lower_line = clean_line.lower()
-
-        should_skip = any(
-            re.search(pattern, lower_line)
-            for pattern in skip_patterns
-        )
-
-        if should_skip:
-            continue
-
-        lines.append(clean_line)
-
-    cleaned = "\n".join(lines)
-    cleaned = re.sub(r"https?://\S+", "", cleaned)
-    cleaned = re.sub(r"www\.\S+", "", cleaned)
-    cleaned = re.sub(r"\s+", " ", cleaned).strip()
-
-    return cleaned
-
