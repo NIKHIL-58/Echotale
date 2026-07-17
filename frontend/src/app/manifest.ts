@@ -1,15 +1,15 @@
-import type { MetadataRoute } from "next";
+﻿import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "EchoTale",
     short_name: "EchoTale",
     description: "Upload PDF books and listen as AI-generated audiobooks.",
-    start_url: "/",
+    start_url: "/dashboard",
     scope: "/",
     display: "standalone",
-    background_color: "#ffffff",
-    theme_color: "#6c4df6",
+    background_color: "#0b0920",
+    theme_color: "#0b0920",
     orientation: "portrait",
     icons: [
       {
