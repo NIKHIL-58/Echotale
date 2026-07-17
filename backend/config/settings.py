@@ -31,7 +31,7 @@ CORS_ALLOWED_ORIGINS = [
     origin.strip()
     for origin in os.getenv(
         "CORS_ALLOWED_ORIGINS",
-        "http://localhost:3000"
+        "http://localhost:3000,http://127.0.0.1:3000"
     ).split(",")
     if origin.strip()
 ]
@@ -127,10 +127,23 @@ REST_FRAMEWORK = {
         "common.authentication.JWTAuthentication",
     ],
     "DEFAULT_PERMISSION_CLASSES": [
-        "rest_framework.permissions.AllowAny",
+        "rest_framework.permissions.IsAuthenticated",
     ],
 }
 
+
+DATA_UPLOAD_MAX_MEMORY_SIZE = int(
+    os.getenv("DATA_UPLOAD_MAX_MEMORY_SIZE", str(30 * 1024 * 1024))
+)
+FILE_UPLOAD_MAX_MEMORY_SIZE = int(
+    os.getenv("FILE_UPLOAD_MAX_MEMORY_SIZE", str(10 * 1024 * 1024))
+)
+MAX_PDF_UPLOAD_SIZE = int(
+    os.getenv("MAX_PDF_UPLOAD_SIZE", str(25 * 1024 * 1024))
+)
+MAX_MEDIA_UPLOAD_SIZE = int(
+    os.getenv("MAX_MEDIA_UPLOAD_SIZE", str(20 * 1024 * 1024))
+)
 
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
@@ -153,7 +166,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 MONGODB_URI = os.getenv("MONGODB_URI", "")
 
 JWT_ACCESS_TOKEN_LIFETIME_MINUTES = int(
-    os.getenv("JWT_ACCESS_TOKEN_LIFETIME_MINUTES", "60")
+    os.getenv("JWT_ACCESS_TOKEN_LIFETIME_MINUTES", "36000")
 )
 
 JWT_ACCESS_TOKEN_LIFETIME = timedelta(
@@ -161,6 +174,8 @@ JWT_ACCESS_TOKEN_LIFETIME = timedelta(
 )
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+PAYMENT_VERIFICATION_URL = os.getenv("PAYMENT_VERIFICATION_URL", "")
+PAYMENT_VERIFICATION_SECRET = os.getenv("PAYMENT_VERIFICATION_SECRET", "")
 
 
 if MONGODB_URI:

@@ -3,15 +3,28 @@
 import { useEffect, useState } from "react";
 import { Bookmark } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
-import type { Story } from "@/services/storyService";
+import { getStories, type Story } from "@/services/storyService";
 import { getBookmarks } from "@/lib/userLists";
 import { StoryGridCard } from "@/components/stories/StoryGridCard";
+import { getServerBookmarks, resolveStories } from "@/services/appService";
+import { getToken } from "@/lib/auth";
 
 export default function BookmarksPage() {
   const [stories, setStories] = useState<Story[]>([]);
 
   useEffect(() => {
-    setStories(getBookmarks());
+    async function loadBookmarks() {
+      if (!getToken()) {
+        setStories(getBookmarks());
+        return;
+      }
+      const [entries, allStories] = await Promise.all([
+        getServerBookmarks(),
+        getStories(),
+      ]);
+      setStories(resolveStories(entries, allStories));
+    }
+    loadBookmarks().catch(() => setStories([]));
   }, []);
 
   return (

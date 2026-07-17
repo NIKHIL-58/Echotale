@@ -43,7 +43,7 @@ export function LoginForm() {
       localStorage.setItem("user", JSON.stringify(data.data.user));
 
       router.push("/dashboard");
-    } catch (err) {
+    } catch {
       setError("Backend not connected. Please check Django server.");
     } finally {
       setLoading(false);
@@ -82,6 +82,11 @@ export function LoginForm() {
         {loading ? "Signing In..." : "Sign In"}
       </Button>
 
+      <p className="text-center text-sm">
+        <a className="text-primary" href="/auth/forgot-password">
+          Forgot password?
+        </a>
+      </p>
       <p className="text-center text-sm text-textMuted">
         No account?{" "}
         <a className="text-primary" href="/auth/signup">

@@ -13,7 +13,7 @@ def notifications(request):
         return success([notification_to_dict(n) for n in qs.order_by('-created_at')])
     serializer=NotificationSerializer(data=request.data)
     if not serializer.is_valid(): return error('Validation failed', errors=serializer.errors)
-    data=serializer.validated_data; data['user_id']=data.get('user_id') or request.user.id
+    data=serializer.validated_data; data['user_id']=request.user.id
     n=NotificationDocument(**data).save(); return success(notification_to_dict(n),'Notification created',201)
 @api_view(['PATCH'])
 @permission_classes([IsAuthenticated])

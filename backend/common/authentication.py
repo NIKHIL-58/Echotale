@@ -11,15 +11,25 @@ class SimpleUser:
         self.email = user_doc.email
         self.name = user_doc.name
         self.is_authenticated = True
+        self.is_anonymous = False
+        self.is_staff = user_doc.role == 'admin'
+        self.is_superuser = user_doc.role == 'admin'
 
 class JWTAuthentication(BaseAuthentication):
+    def authenticate_header(self, request):
+        return 'Bearer'
+
     def authenticate(self, request):
         auth_header = request.headers.get('Authorization', '')
         if not auth_header.startswith('Bearer '):
             return None
-        token = auth_header.split(' ', 1)[1]
+        token = auth_header.split(' ', 1)[1].strip()
+        if not token:
+            raise AuthenticationFailed('Invalid token')
         try:
             payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
+            if payload.get('type', 'access') != 'access':
+                raise AuthenticationFailed('Invalid token')
             user = UserDocument.objects(id=payload.get('user_id')).first()
             if not user:
                 raise AuthenticationFailed('User not found')

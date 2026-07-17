@@ -12,18 +12,31 @@ class StoryCreateSerializer(serializers.Serializer):
     voice = serializers.CharField(required=False, allow_blank=True)
 
 
-def audio_part_to_dict(part):
+def can_access_story_media(story, user=None):
+    if not story.is_premium:
+        return True
+    if not user or not getattr(user, "is_authenticated", False):
+        return False
+    user_doc = getattr(user, "doc", None)
+    return bool(
+        user_doc
+        and (user_doc.is_premium or user_doc.role == "admin")
+    ) or story.uploaded_by == str(user.id)
+
+
+def audio_part_to_dict(part, include_media=True):
     return {
         "part_number": part.part_number,
         "title": part.title,
-        "audio_url": part.audio_url,
+        "audio_url": part.audio_url if include_media else "",
         "text_preview": part.text_preview,
         "duration_estimate": part.duration_estimate,
         "created_at": part.created_at.isoformat() if part.created_at else None,
     }
 
 
-def story_to_dict(story):
+def story_to_dict(story, user=None):
+    include_media = can_access_story_media(story, user)
     return {
         "id": str(story.id),
         "title": story.title,
@@ -33,9 +46,11 @@ def story_to_dict(story):
         "category": story.category,
         "tags": story.tags,
         "cover_image": story.cover_image,
-        "audio_url": story.audio_url,
-        "book_url": story.book_url,
-        "audio_parts": [audio_part_to_dict(part) for part in story.audio_parts],
+        "audio_url": story.audio_url if include_media else "",
+        "book_url": story.book_url if include_media else "",
+        "audio_parts": [
+            audio_part_to_dict(part, include_media) for part in story.audio_parts
+        ],
         "duration": story.duration,
         "rating": story.rating,
         "total_reviews": story.total_reviews,
@@ -44,7 +59,7 @@ def story_to_dict(story):
         "is_premium": story.is_premium,
         "status": story.status,
         "audio_status": story.audio_status,
-        "audio_error": story.audio_error,
+        "audio_error": story.audio_error if include_media else "",
         "voice": getattr(story, "voice", "alloy"),
         "created_at": story.created_at.isoformat() if story.created_at else None,
     }

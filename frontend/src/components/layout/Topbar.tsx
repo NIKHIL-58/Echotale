@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -141,29 +141,29 @@ export function Topbar() {
   const avatarUrl = user?.avatar ? getMediaUrl(user.avatar) : "";
 
   return (
-    <header className="flex items-center justify-between gap-6">
+    <header className="mx-auto flex max-w-[1600px] items-center justify-between gap-3 sm:gap-6">
       <form
         onSubmit={handleSearchSubmit}
-        className="flex h-16 w-full max-w-[560px] items-center gap-4 rounded-2xl border border-[#EAECF0] bg-white px-5 shadow-sm"
+        className="flex h-12 w-full max-w-[620px] items-center gap-3 rounded-2xl border border-[#e8e6ef] bg-white/90 px-4 shadow-[0_6px_24px_rgba(31,25,61,.05)] transition focus-within:border-primary/40 focus-within:ring-4 focus-within:ring-primary/10 sm:h-14 sm:px-5"
       >
-        <Search className="text-[#667085]" size={24} />
+        <Search className="text-[#6E6A7C]" size={24} />
 
         <input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search stories, authors, podcasts..."
+          placeholder="Search your next great listen..."
           className="w-full bg-transparent text-base outline-none placeholder:text-[#98A2B3]"
         />
       </form>
 
-      <div className="relative flex items-center gap-5">
+      <div className="relative flex items-center gap-2 sm:gap-3">
         <button
           type="button"
           onClick={() => {
             setNotificationOpen((prev) => !prev);
             setMenuOpen(false);
           }}
-          className="relative grid h-11 w-11 place-items-center rounded-full bg-white text-[#10142D] shadow-sm hover:bg-[#EEE9FF]"
+          className="relative grid h-11 w-11 place-items-center rounded-2xl border border-[#e8e6ef] bg-white text-[#17162B] shadow-sm transition hover:-translate-y-0.5 hover:bg-[#f7f5ff]"
         >
           <Bell size={22} />
 
@@ -173,16 +173,16 @@ export function Topbar() {
         </button>
 
         {notificationOpen && (
-          <div className="absolute right-24 top-16 z-50 w-80 rounded-3xl border border-[#EAECF0] bg-white p-3 shadow-[0_18px_50px_rgba(16,20,45,0.15)]">
-            <div className="border-b border-[#EAECF0] px-3 py-3">
-              <p className="font-bold text-[#10142D]">Notifications</p>
-              <p className="mt-1 text-sm text-[#667085]">
+          <div className="absolute right-24 top-16 z-50 w-80 rounded-3xl border border-[#E9E5F0] bg-white p-3 shadow-[0_18px_50px_rgba(16,20,45,0.15)]">
+            <div className="border-b border-[#E9E5F0] px-3 py-3">
+              <p className="font-bold text-[#17162B]">Notifications</p>
+              <p className="mt-1 text-sm text-[#6E6A7C]">
                 Latest updates from EchoTale
               </p>
             </div>
 
             {notifications.length === 0 ? (
-              <div className="px-3 py-6 text-center text-sm text-[#667085]">
+              <div className="px-3 py-6 text-center text-sm text-[#6E6A7C]">
                 No notifications yet.
               </div>
             ) : (
@@ -190,20 +190,20 @@ export function Topbar() {
                 {notifications.map((item) => (
                   <div
                     key={item.id}
-                    className="flex gap-3 rounded-2xl px-3 py-3 hover:bg-[#EEE9FF]"
+                    className="flex gap-3 rounded-2xl px-3 py-3 hover:bg-[#F1EDFF]"
                   >
-                    <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#EEE9FF] text-[#6C4DF6]">
+                    <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#F1EDFF] text-[#7251F5]">
                       {renderNotificationIcon(item.icon)}
                     </div>
 
                     <div className="min-w-0">
-                      <p className="text-sm font-bold text-[#10142D]">
+                      <p className="text-sm font-bold text-[#17162B]">
                         {item.title}
                       </p>
-                      <p className="mt-1 line-clamp-2 text-xs text-[#667085]">
+                      <p className="mt-1 line-clamp-2 text-xs text-[#6E6A7C]">
                         {item.message}
                       </p>
-                      <p className="mt-1 text-[11px] font-semibold text-[#6C4DF6]">
+                      <p className="mt-1 text-[11px] font-semibold text-[#7251F5]">
                         {item.time}
                       </p>
                     </div>
@@ -220,9 +220,9 @@ export function Topbar() {
             setMenuOpen((prev) => !prev);
             setNotificationOpen(false);
           }}
-          className="flex items-center gap-3 rounded-2xl px-2 py-2 hover:bg-white"
+          className="flex items-center gap-3 rounded-2xl border border-transparent p-1.5 transition hover:border-[#e8e6ef] hover:bg-white"
         >
-          <div className="grid h-12 w-12 place-items-center overflow-hidden rounded-full bg-[#EEE9FF] text-[#6C4DF6]">
+          <div className="grid h-12 w-12 place-items-center overflow-hidden rounded-full bg-[#F1EDFF] text-[#7251F5]">
             {avatarUrl ? (
               <img
                 src={avatarUrl}
@@ -238,25 +238,25 @@ export function Topbar() {
           </div>
 
           <div className="hidden text-left md:block">
-            <p className="text-base font-bold text-[#10142D]">
+            <p className="text-base font-bold text-[#17162B]">
               Hi, {firstName}
             </p>
-            <p className="text-xs text-[#667085]">{user?.email}</p>
+            <p className="text-xs text-[#6E6A7C]">{user?.email}</p>
           </div>
 
-          <ChevronDown size={18} className="text-[#667085]" />
+          <ChevronDown size={18} className="hidden text-[#6E6A7C] sm:block" />
         </button>
 
         {menuOpen && (
-          <div className="absolute right-0 top-16 z-50 w-64 rounded-3xl border border-[#EAECF0] bg-white p-3 shadow-[0_18px_50px_rgba(16,20,45,0.15)]">
-            <div className="border-b border-[#EAECF0] px-3 py-3">
-              <p className="font-bold text-[#10142D]">{displayName}</p>
-              <p className="mt-1 text-sm text-[#667085]">{user?.email}</p>
+          <div className="absolute right-0 top-16 z-50 w-64 rounded-3xl border border-[#E9E5F0] bg-white p-3 shadow-[0_18px_50px_rgba(16,20,45,0.15)]">
+            <div className="border-b border-[#E9E5F0] px-3 py-3">
+              <p className="font-bold text-[#17162B]">{displayName}</p>
+              <p className="mt-1 text-sm text-[#6E6A7C]">{user?.email}</p>
             </div>
 
             <a
               href="/profile"
-              className="mt-2 flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-semibold text-[#10142D] hover:bg-[#EEE9FF]"
+              className="mt-2 flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-semibold text-[#17162B] hover:bg-[#F1EDFF]"
             >
               <User size={18} />
               Profile
@@ -276,3 +276,4 @@ export function Topbar() {
     </header>
   );
 }
+

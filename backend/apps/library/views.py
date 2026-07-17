@@ -1,8 +1,10 @@
 from rest_framework.decorators import api_view, permission_classes
+from bson import ObjectId
 from rest_framework.permissions import IsAuthenticated
 from common.response import success, error
 from apps.library.models import LibraryDocument
 from apps.library.serializers import LibrarySerializer, library_to_dict
+from apps.stories.models import StoryDocument
 
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
@@ -16,7 +18,11 @@ def library(request):
     serializer = LibrarySerializer(data=request.data)
     if not serializer.is_valid():
         return error('Validation failed', errors=serializer.errors)
-    item = LibraryDocument.objects(user_id=request.user.id, story_id=serializer.validated_data['story_id']).first()
+    story_id = serializer.validated_data['story_id']
+    if not ObjectId.is_valid(story_id) or not StoryDocument.objects(id=story_id, status='published').first():
+        return error('Story not found', 404)
+
+    item = LibraryDocument.objects(user_id=request.user.id, story_id=story_id).first()
     if not item:
         item = LibraryDocument(user_id=request.user.id, **serializer.validated_data)
     else:

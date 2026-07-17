@@ -6,3 +6,5 @@ node_modules/
 .next/
 db.sqlite3
 .DS_Store
+*.log
+*.tsbuildinfo

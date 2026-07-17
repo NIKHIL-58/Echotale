@@ -3,19 +3,36 @@
 import { useEffect, useState } from "react";
 import { Clock, Trash2 } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
-import type { Story } from "@/services/storyService";
+import { getStories, type Story } from "@/services/storyService";
 import { clearHistory, getHistory } from "@/lib/userLists";
 import { StoryGridCard } from "@/components/stories/StoryGridCard";
+import { clearServerHistory, getServerHistory, resolveStories } from "@/services/appService";
+import { getToken } from "@/lib/auth";
 
 export default function HistoryPage() {
   const [stories, setStories] = useState<Story[]>([]);
 
   useEffect(() => {
-    setStories(getHistory());
+    async function loadHistory() {
+      if (!getToken()) {
+        setStories(getHistory());
+        return;
+      }
+      const [entries, allStories] = await Promise.all([
+        getServerHistory(),
+        getStories(),
+      ]);
+      setStories(resolveStories(entries, allStories));
+    }
+    loadHistory().catch(() => setStories([]));
   }, []);
 
-  function handleClear() {
-    clearHistory();
+  async function handleClear() {
+    if (getToken()) {
+      await clearServerHistory();
+    } else {
+      clearHistory();
+    }
     setStories([]);
   }
 

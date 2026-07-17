@@ -5,6 +5,8 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { getStories, type Story } from "@/services/storyService";
+import { getLibrary, resolveStories } from "@/services/appService";
+import { getToken } from "@/lib/auth";
 import { StoryGridCard } from "@/components/stories/StoryGridCard";
 
 export default function LibraryPage() {
@@ -16,8 +18,11 @@ export default function LibraryPage() {
     async function loadLibrary() {
       try {
         setLoading(true);
-        const data = await getStories();
-        setStories(data);
+        if (!getToken()) {
+          throw new Error("Please sign in to view your library.");
+        }
+        const [entries, allStories] = await Promise.all([getLibrary(), getStories()]);
+        setStories(resolveStories(entries, allStories));
       } catch (error) {
         setErrorMessage(
           error instanceof Error ? error.message : "Failed to load library"

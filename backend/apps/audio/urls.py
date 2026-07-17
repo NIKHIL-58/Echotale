@@ -3,6 +3,7 @@ from apps.audio import views
 
 urlpatterns = [
     path('chapters/', views.chapters),
+    path('stories/<str:story_id>/chapters/', views.story_chapters),
     path('progress/', views.save_progress),
     path('continue-listening/', views.continue_listening),
 ]

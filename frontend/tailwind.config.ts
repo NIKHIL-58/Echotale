@@ -1,22 +1,22 @@
-import type { Config } from 'tailwindcss';
+﻿import type { Config } from 'tailwindcss';
 
 const config: Config = {
   content: ['./src/**/*.{js,ts,jsx,tsx,mdx}'],
   theme: {
     extend: {
       colors: {
-        primary: '#6C4DF6',
-        deep: '#120A3D',
-        soft: '#EEE9FF',
-        violet: '#8B5CF6',
-        page: '#F7F8FC',
-        textMain: '#10142D',
-        textMuted: '#667085',
-        borderSoft: '#EAECF0'
+        primary: '#7657D3',
+        deep: '#0D0A22',
+        soft: '#F0ECF7',
+        violet: '#9271E2',
+        page: '#F4F1F5',
+        textMain: '#1C1927',
+        textMuted: '#716D79',
+        borderSoft: '#E7E1E9'
       },
       boxShadow: {
-        soft: '0 8px 24px rgba(16,20,45,.08)',
-        card: '0 12px 32px rgba(16,20,45,.08)'
+        soft: '0 10px 30px rgba(35,27,74,.08)',
+        card: '0 20px 50px rgba(35,27,74,.12)'
       },
       borderRadius: {
         input: '14px',
@@ -28,3 +28,5 @@ const config: Config = {
   plugins: []
 };
 export default config;
+
+

@@ -1,6 +1,5 @@
 from rest_framework import serializers
 class NotificationSerializer(serializers.Serializer):
-    user_id = serializers.CharField(required=False)
     title = serializers.CharField()
     message = serializers.CharField(required=False, allow_blank=True)
     type = serializers.CharField(required=False)

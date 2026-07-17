@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -76,7 +76,7 @@ export function SignupForm() {
       localStorage.setItem("access_token", data.data.token);
       localStorage.setItem("user", JSON.stringify(data.data.user));
 
-      router.push("/auth/login");
+      router.push("/onboarding");
     } catch {
       setError("Backend not connected. Please check Django server.");
     } finally {
@@ -93,7 +93,7 @@ export function SignupForm() {
       )}
 
       <div>
-        <label className="mb-1.5 block text-sm font-bold text-[#10142D]">
+        <label className="mb-1.5 block text-sm font-bold text-[#17162B]">
           Full name
         </label>
 
@@ -108,7 +108,7 @@ export function SignupForm() {
       </div>
 
       <div>
-        <label className="mb-1.5 block text-sm font-bold text-[#10142D]">
+        <label className="mb-1.5 block text-sm font-bold text-[#17162B]">
           Email address
         </label>
 
@@ -124,7 +124,7 @@ export function SignupForm() {
       </div>
 
       <div>
-        <label className="mb-1.5 block text-sm font-bold text-[#10142D]">
+        <label className="mb-1.5 block text-sm font-bold text-[#17162B]">
           Password
         </label>
 
@@ -143,14 +143,14 @@ export function SignupForm() {
           <button
             type="button"
             onClick={() => setShowPassword((prev) => !prev)}
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-[#667085] hover:text-[#6C4DF6]"
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-[#6E6A7C] hover:text-[#7251F5]"
             aria-label={showPassword ? "Hide password" : "Show password"}
           >
             {showPassword ? <EyeOff size={19} /> : <Eye size={19} />}
           </button>
         </div>
 
-        <div className="mt-1.5 flex items-center gap-2 text-xs text-[#667085]">
+        <div className="mt-1.5 flex items-center gap-2 text-xs text-[#6E6A7C]">
           <CheckCircle2
             size={14}
             className={passwordValid ? "text-green-500" : "text-[#CBD5E1]"}
@@ -160,7 +160,7 @@ export function SignupForm() {
       </div>
 
       <div>
-        <label className="mb-1.5 block text-sm font-bold text-[#10142D]">
+        <label className="mb-1.5 block text-sm font-bold text-[#17162B]">
           Confirm password
         </label>
 
@@ -179,7 +179,7 @@ export function SignupForm() {
           <button
             type="button"
             onClick={() => setShowConfirmPassword((prev) => !prev)}
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-[#667085] hover:text-[#6C4DF6]"
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-[#6E6A7C] hover:text-[#7251F5]"
             aria-label={
               showConfirmPassword
                 ? "Hide confirm password"
@@ -191,7 +191,7 @@ export function SignupForm() {
         </div>
 
         {confirmPassword && (
-          <div className="mt-1.5 flex items-center gap-2 text-xs text-[#667085]">
+          <div className="mt-1.5 flex items-center gap-2 text-xs text-[#6E6A7C]">
             <CheckCircle2
               size={14}
               className={passwordsMatch ? "text-green-500" : "text-red-400"}
@@ -216,10 +216,10 @@ export function SignupForm() {
         )}
       </Button>
 
-      <p className="pt-1 text-center text-sm text-[#667085]">
+      <p className="pt-1 text-center text-sm text-[#6E6A7C]">
         Already have an account?{" "}
         <a
-          className="font-bold text-[#6C4DF6] hover:underline"
+          className="font-bold text-[#7251F5] hover:underline"
           href="/auth/login"
         >
           Sign in

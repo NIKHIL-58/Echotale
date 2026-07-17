@@ -1,38 +1,38 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { ArrowRight, Star } from "lucide-react";
 
 export function HeroBanner() {
   return (
-    <section className="relative overflow-hidden rounded-[32px] bg-[#120A3D] px-8 py-14 text-white shadow-card md:px-12">
+    <section className="relative overflow-hidden rounded-[28px] bg-[#0b0920] px-6 py-10 text-white shadow-[0_24px_55px_rgba(26,16,72,.18)] sm:px-9 md:min-h-[390px] md:px-12 md:py-14">
       <div
-        className="absolute inset-0 opacity-55"
+        className="absolute inset-0"
         style={{
           backgroundImage:
-            "linear-gradient(90deg, rgba(18,10,61,0.95), rgba(18,10,61,0.35)), url('https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=1600&h=700&fit=crop')",
+            "linear-gradient(90deg, rgba(8,6,25,.98) 0%, rgba(10,7,31,.88) 43%, rgba(10,7,31,.15) 78%), url('/premium-story-world.png')",
           backgroundSize: "cover",
-          backgroundPosition: "center",
+          backgroundPosition: "center right",
         }}
       />
 
       <div className="relative z-10 max-w-2xl">
-        <div className="mb-8 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm font-bold backdrop-blur">
-          <Star size={16} className="fill-white" />
+        <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-bold uppercase tracking-[.12em] backdrop-blur">
+          <Star size={16} className="fill-[#e7bd69] text-[#e7bd69]" />
           Editor&apos;s Pick
         </div>
 
-        <h1 className="text-5xl font-extrabold leading-tight md:text-6xl">
-          Stories That Resonate
+        <h1 className="max-w-xl text-4xl font-extrabold leading-[1.05] tracking-[-.045em] sm:text-5xl md:text-6xl">
+          A world of stories, made to be heard.
         </h1>
 
-        <p className="mt-6 text-2xl font-medium text-white/90">
-          Listen. Feel. Remember.
+        <p className="mt-5 max-w-lg text-base leading-7 text-white/70 sm:text-lg">
+          Discover immersive audiobooks, save your favorites, and pick up exactly where you left off.
         </p>
 
         <Link
           href="/explore"
-          className="mt-10 inline-flex h-[64px] items-center justify-center gap-4 rounded-2xl bg-white px-8 text-xl font-extrabold text-primary shadow-[0_18px_40px_rgba(255,255,255,0.35)] transition hover:scale-[1.02]"
+          className="mt-8 inline-flex items-center justify-center gap-3 rounded-[14px] bg-gradient-to-r from-[#f8df9a] to-[#dcae54] px-6 py-3.5 text-sm font-extrabold text-[#241807] shadow-[0_14px_32px_rgba(0,0,0,.2)] transition hover:-translate-y-0.5 hover:brightness-105"
         >
           Explore Now
           <ArrowRight size={24} />
@@ -41,3 +41,5 @@ export function HeroBanner() {
     </section>
   );
 }
+
+

@@ -4,17 +4,43 @@ import Link from "next/link";
 import { BookOpen, Bookmark, Headphones, Play } from "lucide-react";
 import { getMediaUrl, type Story } from "@/services/storyService";
 import { isBookmarked, toggleBookmark } from "@/lib/userLists";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import {
+  addServerBookmark,
+  getServerBookmarks,
+  removeServerBookmark,
+} from "@/services/appService";
+import { getToken } from "@/lib/auth";
 
 export function StoryGridCard({ story }: { story: Story }) {
   const [bookmarked, setBookmarked] = useState(() => isBookmarked(story.id));
+  useEffect(() => {
+    if (!getToken()) return;
+    getServerBookmarks()
+      .then((entries) => {
+        setBookmarked(entries.some((entry) => entry.story_id === story.id));
+      })
+      .catch(() => undefined);
+  }, [story.id]);
 
-  function handleBookmark(event: React.MouseEvent) {
+
+  async function handleBookmark(event: React.MouseEvent) {
     event.preventDefault();
     event.stopPropagation();
 
-    const result = toggleBookmark(story);
-    setBookmarked(result);
+    if (!getToken()) {
+      setBookmarked(toggleBookmark(story));
+      return;
+    }
+    const entries = await getServerBookmarks();
+    const existing = entries.find((entry) => entry.story_id === story.id);
+    if (existing) {
+      await removeServerBookmark(existing.id);
+      setBookmarked(false);
+    } else {
+      await addServerBookmark(story.id);
+      setBookmarked(true);
+    }
   }
 
   const coverUrl = getMediaUrl(story.cover_image);

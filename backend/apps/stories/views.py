@@ -14,6 +14,7 @@ from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from common.response import success, error
+from common.permissions import can_manage_story
 from common.supabase_storage import upload_django_file, upload_bytes, upload_local_file
 from apps.stories.models import StoryDocument, AudioPartDocument
 from apps.stories.serializers import StoryCreateSerializer, story_to_dict
@@ -564,7 +565,7 @@ def story_list(request):
         stories = stories.filter(category__iexact=category)
 
     return success(
-        [story_to_dict(story) for story in stories],
+        [story_to_dict(story, request.user) for story in stories],
         "Stories fetched successfully",
     )
 
@@ -580,10 +581,13 @@ def story_detail(request, story_id):
     if not story:
         return error("Story not found", 404)
 
+    if story.status != "published" and not can_manage_story(request, story):
+        return error("Story not found", 404)
+
     story.total_listens += 1
     story.save()
 
-    return success(story_to_dict(story), "Story fetched successfully")
+    return success(story_to_dict(story, request.user), "Story fetched successfully")
 
 
 @api_view(["POST"])
@@ -599,12 +603,33 @@ def create_story(request):
 
     book_file = request.FILES.get("book_file")
     cover_file = request.FILES.get("cover_file")
+    audio_file = request.FILES.get("audio_file")
 
     if not book_file:
         return error("Please upload a PDF book file.", 400)
 
+    if not book_file.name.lower().endswith(".pdf"):
+        return error("Only PDF book files are supported.", 400)
+    if book_file.size > settings.MAX_PDF_UPLOAD_SIZE:
+        return error("PDF file is too large (maximum 25 MB).", 400)
+    signature = book_file.read(5)
+    book_file.seek(0)
+    if signature != b"%PDF-":
+        return error("The uploaded book is not a valid PDF file.", 400)
+    if cover_file and (
+        cover_file.size > settings.MAX_MEDIA_UPLOAD_SIZE
+        or not (cover_file.content_type or "").startswith("image/")
+    ):
+        return error("Cover must be an image smaller than 20 MB.", 400)
+    if audio_file and (
+        audio_file.size > settings.MAX_MEDIA_UPLOAD_SIZE
+        or not (audio_file.content_type or "").startswith("audio/")
+    ):
+        return error("Audio must be an audio file smaller than 20 MB.", 400)
+
     book_url = save_uploaded_file(book_file, "books")
     cover_image = save_uploaded_file(cover_file, "covers") if cover_file else ""
+    provided_audio_url = save_uploaded_file(audio_file, "audio") if audio_file else ""
 
     pdf_info = {
         "title": "",
@@ -641,13 +666,13 @@ def create_story(request):
         category=category,
         tags=tags,
         cover_image=cover_image,
-        audio_url="",
+        audio_url=provided_audio_url,
         book_url=book_url,
         audio_parts=[],
-        duration=0,
+        duration=data.get("duration", 0) if provided_audio_url else 0,
         is_premium=data.get("is_premium", False),
         uploaded_by=str(request.user.doc.id),
-        audio_status="generating",
+        audio_status="generated" if provided_audio_url else "generating",
         audio_error="",
         voice=voice,
         created_at=datetime.utcnow(),
@@ -656,15 +681,18 @@ def create_story(request):
 
     story.save()
 
-    threading.Thread(
-        target=generate_audio_parts_background,
-        args=(str(story.id),),
-        daemon=True,
-    ).start()
+    if not provided_audio_url:
+        threading.Thread(
+            target=generate_audio_parts_background,
+            args=(str(story.id),),
+            daemon=True,
+        ).start()
 
     return success(
-        story_to_dict(story),
-        "PDF story uploaded successfully. Audio generation has started.",
+        story_to_dict(story, request.user),
+        "Story uploaded successfully."
+        if provided_audio_url
+        else "PDF story uploaded successfully. Audio generation has started.",
         201,
     )
 
@@ -677,7 +705,7 @@ def my_stories(request):
     ).order_by("-created_at")
 
     return success(
-        [story_to_dict(story) for story in stories],
+        [story_to_dict(story, request.user) for story in stories],
         "My stories fetched successfully",
     )
 
@@ -693,7 +721,7 @@ def regenerate_story_audio_parts(request, story_id):
     if not story:
         return error("Story not found", 404)
 
-    if story.uploaded_by != str(request.user.doc.id):
+    if not can_manage_story(request, story):
         return error("You can only generate audio for your own story.", 403)
 
     if not story.book_url:
@@ -717,6 +745,6 @@ def regenerate_story_audio_parts(request, story_id):
     ).start()
 
     return success(
-        story_to_dict(story),
+        story_to_dict(story, request.user),
         "Audio regeneration has started.",
     )

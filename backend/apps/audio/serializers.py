@@ -10,13 +10,13 @@ class ChapterSerializer(serializers.Serializer):
 class ProgressSerializer(serializers.Serializer):
     story_id = serializers.CharField()
     chapter_id = serializers.CharField(required=False, allow_blank=True)
-    current_time = serializers.IntegerField(default=0)
-    duration = serializers.IntegerField(default=0)
-    percentage = serializers.IntegerField(default=0)
+    current_time = serializers.IntegerField(default=0, min_value=0)
+    duration = serializers.IntegerField(default=0, min_value=0)
+    percentage = serializers.IntegerField(default=0, min_value=0, max_value=100)
     completed = serializers.BooleanField(required=False)
 
-def chapter_to_dict(chapter):
-    return {'id': str(chapter.id), 'story_id': chapter.story_id, 'title': chapter.title, 'chapter_number': chapter.chapter_number, 'duration': chapter.duration, 'audio_url': chapter.audio_url}
+def chapter_to_dict(chapter, include_media=True):
+    return {'id': str(chapter.id), 'story_id': chapter.story_id, 'title': chapter.title, 'chapter_number': chapter.chapter_number, 'duration': chapter.duration, 'audio_url': chapter.audio_url if include_media else ''}
 
 def progress_to_dict(progress):
     return {'id': str(progress.id), 'user_id': progress.user_id, 'story_id': progress.story_id, 'chapter_id': progress.chapter_id, 'current_time': progress.current_time, 'duration': progress.duration, 'percentage': progress.percentage, 'completed': progress.completed, 'last_played_at': progress.last_played_at.isoformat()}

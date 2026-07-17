@@ -2,6 +2,12 @@ const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000";
 
 const API_URL = `${API_BASE}/api`;
+function authHeaders(): HeadersInit {
+  if (typeof window === "undefined") return {};
+  const token = localStorage.getItem("access_token");
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
 
 export type AudioPart = {
   part_number: number;
@@ -43,6 +49,7 @@ export function getMediaUrl(path?: string) {
 export async function getStories(): Promise<Story[]> {
   const res = await fetch(`${API_URL}/stories/`, {
     cache: "no-store",
+    headers: authHeaders(),
   });
 
   const data = await res.json();
@@ -57,6 +64,7 @@ export async function getStories(): Promise<Story[]> {
 export async function getStory(id: string): Promise<Story> {
   const res = await fetch(`${API_URL}/stories/${id}/`, {
     cache: "no-store",
+    headers: authHeaders(),
   });
 
   const data = await res.json();

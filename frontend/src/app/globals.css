@@ -1,21 +1,90 @@
-@tailwind base;
+﻿@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --color-primary: #6C4DF6;
-  --color-primary-soft: #EEE9FF;
-  --color-bg: #F7F8FC;
-  --color-text: #10142D;
+  --color-primary: #7657d3;
+  --color-primary-soft: #f0ecf7;
+  --color-bg: #f4f1f5;
+  --color-text: #1c1927;
   --radius-card: 16px;
   --radius-widget: 24px;
-  --shadow-soft: 0 12px 32px rgba(16,20,45,0.08);
+  --shadow-soft: 0 12px 35px rgba(38,29,79,0.08);
   --player-height: 92px;
 }
 
 * { box-sizing: border-box; }
-body { margin: 0; background: var(--color-bg); color: var(--color-text); font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+html { scroll-behavior: smooth; }
+body { margin: 0; min-height: 100vh; background: radial-gradient(circle at 75% -10%, rgba(109,74,255,.08), transparent 28%), var(--color-bg); color: var(--color-text); font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; -webkit-font-smoothing: antialiased; }
 a { color: inherit; text-decoration: none; }
 button, input, select, textarea { font: inherit; }
+button, a { -webkit-tap-highlight-color: transparent; }
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 3px solid rgba(109,74,255,.25); outline-offset: 2px; }
+::selection { background: #dcd3ff; color: #21145c; }
 ::-webkit-scrollbar { width: 8px; height: 8px; }
-::-webkit-scrollbar-thumb { background: #d9d6f8; border-radius: 999px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #d5d1e6; border-radius: 999px; }
+
+@layer components {
+  .surface { @apply rounded-[24px] border border-white/70 bg-white/90 shadow-soft backdrop-blur-sm; }
+  .page-title { @apply text-3xl font-extrabold tracking-[-0.035em] text-textMain sm:text-4xl; }
+  .page-subtitle { @apply mt-2 max-w-2xl text-sm leading-6 text-textMuted sm:text-base; }
+  .section-title { @apply text-xl font-extrabold tracking-[-0.02em] text-textMain sm:text-2xl; }
+}
+
+
+
+/* EchoTale premium visual system — shared by every frontend route */
+body {
+  background:
+    radial-gradient(circle at 88% -6%, rgba(117, 83, 208, .10), transparent 30rem),
+    radial-gradient(circle at 7% 55%, rgba(218, 174, 87, .06), transparent 26rem),
+    linear-gradient(145deg, #f8f6f3 0%, #f3eff4 55%, #f7f5f4 100%);
+  background-attachment: fixed;
+}
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(115deg, rgba(255,255,255,.42), transparent 35%, rgba(118,87,211,.025));
+}
+
+/* Upgrade common legacy surfaces without changing page behavior. */
+body .bg-white {
+  background-color: rgba(255, 255, 255, .88);
+  border-color: rgba(226, 219, 229, .82);
+}
+body .bg-page { background-color: rgba(241, 237, 243, .9); }
+body .bg-soft { background-color: #f0ecf7; }
+body .text-primary { color: #7657d3; }
+body .bg-primary { background-color: #7657d3; }
+body .border-borderSoft { border-color: #e7e1e9; }
+
+/* Consistent depth and interaction across cards on all pages. */
+.rounded-widget, .rounded-card {
+  border: 1px solid rgba(231, 226, 240, .8);
+}
+a.rounded-widget, button.rounded-widget, .group.rounded-widget,
+a.rounded-card, button.rounded-card, .group.rounded-card {
+  transition: transform .24s ease, box-shadow .24s ease, border-color .24s ease;
+}
+a.rounded-widget:hover, button.rounded-widget:hover, .group.rounded-widget:hover,
+a.rounded-card:hover, button.rounded-card:hover, .group.rounded-card:hover {
+  border-color: rgba(118,87,211,.22);
+  box-shadow: 0 22px 50px rgba(32,24,54,.13);
+}
+
+/* Premium gradient treatment for primary actions. */
+button.bg-primary, a.bg-primary {
+  background-image: linear-gradient(135deg, #7657d3 0%, #8d61ff 100%);
+  box-shadow: 0 10px 24px rgba(118,87,211,.22);
+}
+button.bg-primary:hover, a.bg-primary:hover { filter: saturate(1.08) brightness(1.03); }
+
+@media (max-width: 640px) {
+  body::before { opacity: .25; background-size: 20px 20px; }
+}
+
+

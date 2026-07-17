@@ -9,12 +9,21 @@ class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True)
 
+class ForgotPasswordSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+
+class ResetPasswordSerializer(serializers.Serializer):
+    token = serializers.CharField()
+    password = serializers.CharField(min_length=6, write_only=True)
+
+
 class ProfileUpdateSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=120, required=False)
     avatar = serializers.CharField(required=False, allow_blank=True)
     language = serializers.CharField(required=False)
     favorite_genres = serializers.ListField(child=serializers.CharField(), required=False)
-    listening_goal = serializers.IntegerField(required=False)
+    listening_goal = serializers.IntegerField(required=False, min_value=1, max_value=1440)
 
 def user_to_dict(user):
     return {

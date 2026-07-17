@@ -7,6 +7,14 @@ import { Badge } from "@/components/ui/Badge";
 import { usePlayerStore } from "@/store/playerStore";
 import { addToHistory } from "@/lib/userLists";
 import {
+  addToLibrary,
+  getReviews,
+  recordHistory,
+  saveReview,
+  type Review,
+} from "@/services/appService";
+import { getToken } from "@/lib/auth";
+import {
   getMediaUrl,
   getStory,
   regenerateAudioParts,
@@ -32,6 +40,10 @@ export default function StoryDetailPage() {
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState("");
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState("");
+  const [actionMessage, setActionMessage] = useState("");
 
   async function loadStory(showLoader = true) {
   try {
@@ -44,6 +56,9 @@ export default function StoryDetailPage() {
     const data = await getStory(storyId);
     setStory(data);
     addToHistory(data);
+    if (getToken()) {
+      recordHistory(data.id).catch(() => undefined);
+    }
   } catch {
     setError("Unable to load story.");
   } finally {
@@ -87,11 +102,44 @@ export default function StoryDetailPage() {
   setSelectedPart(index);
   usePlayerStore.getState().setQueue(queue, index);
 }
+  async function handleAddToLibrary() {
+    if (!getToken()) {
+      setActionMessage("Please sign in to add this story to your library.");
+      return;
+    }
+    try {
+      await addToLibrary(storyId);
+      setActionMessage("Added to your library.");
+    } catch {
+      setActionMessage("Unable to update your library.");
+    }
+  }
+
+  async function handleReview(event: React.FormEvent) {
+    event.preventDefault();
+    if (!getToken()) {
+      setActionMessage("Please sign in to leave a review.");
+      return;
+    }
+    try {
+      await saveReview(storyId, rating, comment);
+      setReviews(await getReviews(storyId));
+      setComment("");
+      setActionMessage("Review saved.");
+      await loadStory(false);
+    } catch {
+      setActionMessage("Unable to save your review.");
+    }
+  }
 
   useEffect(() => {
     if (storyId) {
       loadStory(true);
     }
+  }, [storyId]);
+  useEffect(() => {
+    if (!storyId) return;
+    getReviews(storyId).then(setReviews).catch(() => setReviews([]));
   }, [storyId]);
 
   useEffect(() => {
@@ -302,6 +350,13 @@ export default function StoryDetailPage() {
             </div>
 
             <div className="mt-6 flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={handleAddToLibrary}
+                className="inline-flex h-[52px] items-center gap-2 rounded-2xl bg-soft px-6 font-bold text-primary"
+              >
+                Add to Library
+              </button>
               {activeAudioUrl && (
                 <button
                   type="button"
@@ -348,6 +403,40 @@ export default function StoryDetailPage() {
                 ))}
               </div>
             )}
+          </div>
+        </section>
+        <section className="rounded-[32px] bg-white p-6 shadow-soft">
+          <h2 className="text-2xl font-bold">Reviews</h2>
+          <form onSubmit={handleReview} className="mt-5 space-y-4 rounded-card bg-page p-5">
+            <label className="block font-semibold">
+              Rating
+              <select
+                value={rating}
+                onChange={(event) => setRating(Number(event.target.value))}
+                className="ml-3 rounded-xl border border-borderSoft bg-white px-3 py-2"
+              >
+                {[5, 4, 3, 2, 1].map((value) => <option key={value} value={value}>{value} stars</option>)}
+              </select>
+            </label>
+            <textarea
+              value={comment}
+              onChange={(event) => setComment(event.target.value)}
+              placeholder="Share your thoughts"
+              className="min-h-24 w-full rounded-2xl border border-borderSoft p-4"
+            />
+            <button type="submit" className="rounded-full bg-primary px-5 py-3 font-bold text-white">
+              Save review
+            </button>
+          </form>
+          {actionMessage && <p className="mt-4 text-sm font-semibold text-primary">{actionMessage}</p>}
+          <div className="mt-6 space-y-3">
+            {reviews.length === 0 && <p className="text-textMuted">No reviews yet.</p>}
+            {reviews.map((review) => (
+              <article key={review.id} className="rounded-card border border-borderSoft p-4">
+                <p className="font-bold">{review.rating} / 5</p>
+                <p className="mt-1 text-textMuted">{review.comment || "No comment"}</p>
+              </article>
+            ))}
           </div>
         </section>
       </div>
