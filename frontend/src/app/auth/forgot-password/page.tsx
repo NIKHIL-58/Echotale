@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { FormEvent, useState } from "react";
 import Link from "next/link";
@@ -24,8 +24,8 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <AuthLayout title="Forgot password">
-      <form onSubmit={submit} className="space-y-4">
+    <AuthLayout title="Reset access" subtitle="Enter the email connected to your account and receive a secure reset link.">
+      <form onSubmit={submit} className="max-w-md space-y-4">
         <Input
           type="email"
           placeholder="Email address"
@@ -44,3 +44,4 @@ export default function ForgotPasswordPage() {
     </AuthLayout>
   );
 }
+

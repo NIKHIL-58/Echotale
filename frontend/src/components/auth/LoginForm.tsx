@@ -1,98 +1,13 @@
-"use client";
-
+﻿"use client";
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Eye, EyeOff, Loader2, LockKeyhole, Mail } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { API_URL } from "@/lib/api";
-
 export function LoginForm() {
-  const router = useRouter();
-
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  async function handleLogin(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-
-    setError("");
-    setLoading(true);
-
-    try {
-      const res = await fetch(`${API_URL}/auth/login/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email,
-          password,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok || !data.success) {
-        setError(data.message || "Login failed");
-        return;
-      }
-
-      localStorage.setItem("access_token", data.data.token);
-      localStorage.setItem("user", JSON.stringify(data.data.user));
-
-      router.push("/dashboard");
-    } catch {
-      setError("Backend not connected. Please check Django server.");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  return (
-    <form onSubmit={handleLogin} className="space-y-4">
-      {error && (
-        <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
-          {error}
-        </p>
-      )}
-
-      <Input
-        type="email"
-        placeholder="Email"
-        value={email}
-        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-          setEmail(e.target.value)
-        }
-        required
-      />
-
-      <Input
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-          setPassword(e.target.value)
-        }
-        required
-      />
-
-      <Button type="submit" disabled={loading} className="w-full">
-        {loading ? "Signing In..." : "Sign In"}
-      </Button>
-
-      <p className="text-center text-sm">
-        <a className="text-primary" href="/auth/forgot-password">
-          Forgot password?
-        </a>
-      </p>
-      <p className="text-center text-sm text-textMuted">
-        No account?{" "}
-        <a className="text-primary" href="/auth/signup">
-          Sign up
-        </a>
-      </p>
-    </form>
-  );
+  const router=useRouter(); const [email,setEmail]=useState(""); const [password,setPassword]=useState(""); const [show,setShow]=useState(false); const [error,setError]=useState(""); const [loading,setLoading]=useState(false);
+  async function handleLogin(e:React.FormEvent<HTMLFormElement>){e.preventDefault();setError("");setLoading(true);try{const res=await fetch(`${API_URL}/auth/login/`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email,password})});const data=await res.json();if(!res.ok||!data.success){setError(data.message||"We could not sign you in. Check your details.");return;}localStorage.setItem("access_token",data.data.token);localStorage.setItem("user",JSON.stringify(data.data.user));const next=new URLSearchParams(window.location.search).get("next");router.replace(next&&next.startsWith("/")?next:"/dashboard");}catch{setError("EchoTale cannot reach the server right now. Please try again.");}finally{setLoading(false);}}
+  return <form onSubmit={handleLogin} className="max-w-md space-y-4">{error&&<p role="alert" className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-600">{error}</p>}<div><label className="mb-1.5 block text-sm font-bold text-[#17162B]">Email address</label><div className="relative"><Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-[#9993a5]" size={18}/><Input type="email" autoComplete="email" placeholder="you@example.com" value={email} onChange={e=>setEmail(e.target.value)} className="pl-11" required/></div></div><div><div className="mb-1.5 flex items-center justify-between"><label className="text-sm font-bold text-[#17162B]">Password</label><Link className="text-xs font-bold text-primary hover:underline" href="/auth/forgot-password">Forgot password?</Link></div><div className="relative"><LockKeyhole className="absolute left-4 top-1/2 -translate-y-1/2 text-[#9993a5]" size={18}/><Input type={show?"text":"password"} autoComplete="current-password" placeholder="Enter your password" value={password} onChange={e=>setPassword(e.target.value)} className="px-11" required/><button type="button" onClick={()=>setShow(!show)} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#777181]" aria-label={show?"Hide password":"Show password"}>{show?<EyeOff size={18}/>:<Eye size={18}/>}</button></div></div><Button type="submit" disabled={loading} className="h-[50px] w-full rounded-[14px] text-sm font-bold shadow-[0_12px_25px_rgba(108,77,246,.24)]">{loading?<span className="flex items-center gap-2"><Loader2 size={18} className="animate-spin"/>Signing in...</span>:"Sign in to EchoTale"}</Button><p className="text-center text-sm text-textMuted">New to EchoTale? <Link className="font-bold text-primary hover:underline" href="/auth/signup">Create free account</Link></p></form>;
 }
