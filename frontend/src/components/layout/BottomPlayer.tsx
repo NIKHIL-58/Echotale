@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useRef, useState } from "react";
 import {
@@ -141,52 +141,7 @@ export function BottomPlayer() {
   const progress =
     durationToShow > 0 ? Math.min((currentTime / durationToShow) * 100, 100) : 0;
 
-  if (!track) {
-    return (
-      <div className="fixed bottom-0 left-0 right-0 z-30 hidden h-[92px] items-center justify-between border-t border-borderSoft bg-white/90 px-8 shadow-card backdrop-blur lg:flex">
-        <div className="flex w-72 items-center gap-4">
-          <div className="grid h-14 w-14 place-items-center rounded-lg bg-soft text-primary">
-            <Music size={24} />
-          </div>
-
-          <div>
-            <p className="font-bold text-textMain">No audio selected</p>
-            <p className="text-sm text-textMuted">
-              Open a story and play an audio part
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-6 text-textMuted">
-          <Shuffle className="h-5 w-5" />
-          <SkipBack />
-          <button
-            type="button"
-            disabled
-            className="grid h-14 w-14 place-items-center rounded-full bg-borderSoft text-textMuted"
-          >
-            <Play />
-          </button>
-          <SkipForward />
-          <Repeat className="h-5 w-5" />
-        </div>
-
-        <div className="flex w-[430px] items-center gap-5">
-          <span className="text-xs text-textMuted">00:00 / 00:00</span>
-          <div className="h-1.5 flex-1 rounded-full bg-borderSoft" />
-          <Volume2 />
-          <ListMusic />
-          <button
-            type="button"
-            onClick={toggleExpanded}
-            className="grid h-10 w-10 place-items-center rounded-full bg-white shadow-soft"
-          >
-            <ChevronUp />
-          </button>
-        </div>
-      </div>
-    );
-  }
+  if (!track) return null;
 
   return (
     <>

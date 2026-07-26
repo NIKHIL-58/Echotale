@@ -1,9 +1,9 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { Badge } from "@/components/ui/Badge";
+
 import { usePlayerStore } from "@/store/playerStore";
 import { addToHistory } from "@/lib/userLists";
 import {
@@ -22,13 +22,17 @@ import {
 } from "@/services/storyService";
 import {
   BookOpen,
-  Download,
+  FileDown,
   FileText,
   Headphones,
+  Library,
   Loader2,
+  MessageSquareText,
   Play,
   RefreshCcw,
+  Send,
   Star,
+  UserRound,
 } from "lucide-react";
 
 export default function StoryDetailPage() {
@@ -222,9 +226,9 @@ export default function StoryDetailPage() {
           </div>
 
           <div className="flex flex-col justify-center">
-            <Badge>{story.category || "Book"}</Badge>
 
-            <h1 className="mt-4 text-4xl font-extrabold text-textMain">
+
+            <h1 className="text-4xl font-extrabold text-textMain">
               {story.title}
             </h1>
 
@@ -248,17 +252,54 @@ export default function StoryDetailPage() {
                 {story.duration || 0} min
               </span>
             </div>
+            <div className="mt-6 flex items-center gap-3">
+              <button
+                type="button"
+                onClick={handleAddToLibrary}
+                title="Add to library"
+                aria-label="Add to library"
+                className="grid h-11 w-11 place-items-center rounded-full border border-borderSoft bg-white text-textMain shadow-sm transition hover:-translate-y-0.5 hover:border-primary/30 hover:text-primary hover:shadow-soft"
+              >
+                <Library size={19} />
+              </button>
+              {bookUrl && (
+                <a
+                  href={bookUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  title="Open PDF"
+                  aria-label="Open PDF"
+                  className="grid h-11 w-11 place-items-center rounded-full border border-borderSoft bg-white text-textMain shadow-sm transition hover:-translate-y-0.5 hover:border-primary/30 hover:text-primary hover:shadow-soft"
+                >
+                  <FileDown size={19} />
+                </a>
+              )}
+            </div>
 
             <p className="mt-6 max-w-3xl leading-7 text-textMuted">
               {story.description || "No description available for this story."}
             </p>
 
-            <div className="mt-8 rounded-[24px] bg-page p-5">
+            {story.tags?.length > 0 && (
+              <div className="mt-6 flex flex-wrap gap-2">
+                {story.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="rounded-full bg-page px-4 py-2 text-sm font-semibold text-textMuted"
+                  >
+                    #{tag}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+            <section className="rounded-[28px] bg-page p-5 shadow-soft sm:p-7">
               <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <h3 className="font-bold text-textMain">Audiobook Parts</h3>
                   <p className="text-sm text-textMuted">
-                    Click any completed part to send it to the bottom player.
+                    Select any completed part to start listening.
                   </p>
                 </div>
 
@@ -297,13 +338,7 @@ export default function StoryDetailPage() {
                   automatically.
                 </div>
               )}
-
-              {activeAudioUrl ? (
-                <audio key={activeAudioUrl} controls className="w-full">
-                  <source src={activeAudioUrl} type="audio/mpeg" />
-                  Your browser does not support the audio element.
-                </audio>
-              ) : (
+              {!activeAudioUrl && (
                 <div className="rounded-2xl bg-yellow-50 px-5 py-4 text-sm font-semibold text-yellow-700">
                   Audio is not generated yet. Click Generate Audio.
                   {story.audio_error && (
@@ -313,7 +348,7 @@ export default function StoryDetailPage() {
               )}
 
               {audioParts.length > 0 && (
-                <div className="mt-5 grid gap-3">
+                <div className="mt-5 grid gap-3 md:grid-cols-2">
                   {audioParts.map((part, index) => (
                     <button
                       key={part.part_number}
@@ -347,99 +382,103 @@ export default function StoryDetailPage() {
                   ))}
                 </div>
               )}
+            </section>
+
+        <section className="overflow-hidden rounded-[30px] border border-borderSoft bg-white shadow-soft">
+          <div className="flex flex-col gap-4 border-b border-borderSoft px-6 py-6 sm:flex-row sm:items-center sm:justify-between sm:px-8">
+            <div className="flex items-center gap-3">
+              <span className="grid h-11 w-11 place-items-center rounded-2xl bg-soft text-primary"><MessageSquareText size={21} /></span>
+              <div>
+                <h2 className="text-2xl font-extrabold tracking-[-.03em]">Reader reviews</h2>
+                <p className="mt-0.5 text-sm text-textMuted">Share what this story made you feel.</p>
+              </div>
             </div>
-
-            <div className="mt-6 flex flex-wrap gap-3">
-              <button
-                type="button"
-                onClick={handleAddToLibrary}
-                className="inline-flex h-[52px] items-center gap-2 rounded-2xl bg-soft px-6 font-bold text-primary"
-              >
-                Add to Library
-              </button>
-              {activeAudioUrl && (
-                <button
-                  type="button"
-                  onClick={() => handleSelectAudioPart(selectedPart)}
-                  className="inline-flex h-[52px] items-center gap-2 rounded-2xl bg-primary px-6 font-bold text-white shadow-[0_12px_28px_rgba(108,77,246,0.25)]"
-                >
-                  <Play size={20} />
-                  Play in Bottom Player
-                </button>
-              )}
-
-              {activeAudioUrl && (
-                <a
-                  href={activeAudioUrl}
-                  target="_blank"
-                  className="inline-flex h-[52px] items-center gap-2 rounded-2xl bg-soft px-6 font-bold text-primary"
-                >
-                  <Play size={20} />
-                  Open Audio
-                </a>
-              )}
-
-              {bookUrl && (
-                <a
-                  href={bookUrl}
-                  target="_blank"
-                  className="inline-flex h-[52px] items-center gap-2 rounded-2xl bg-soft px-6 font-bold text-primary"
-                >
-                  <Download size={20} />
-                  Open PDF
-                </a>
-              )}
+            <div className="flex items-center gap-3 rounded-2xl bg-page px-4 py-3">
+              <span className="text-2xl font-black text-textMain">{Number(story.rating || 0).toFixed(1)}</span>
+              <div>
+                <div className="flex gap-0.5 text-[#e5ad32]">{[1,2,3,4,5].map((value)=><Star key={value} size={14} fill={value <= Math.round(story.rating || 0) ? "currentColor" : "none"} />)}</div>
+                <p className="mt-1 text-[11px] font-semibold text-textMuted">{reviews.length} {reviews.length === 1 ? "review" : "reviews"}</p>
+              </div>
             </div>
+          </div>
 
-            {story.tags?.length > 0 && (
-              <div className="mt-6 flex flex-wrap gap-2">
-                {story.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="rounded-full bg-page px-4 py-2 text-sm font-semibold text-textMuted"
+          <div className="grid gap-8 p-6 sm:p-8 lg:grid-cols-[minmax(0,.9fr)_minmax(0,1.1fr)]">
+            <form onSubmit={handleReview} className="h-fit rounded-[24px] border border-borderSoft bg-page p-5 sm:p-6">
+              <p className="text-sm font-bold text-textMain">Your rating</p>
+              <div className="mt-3 flex items-center gap-1.5" role="radiogroup" aria-label="Story rating">
+                {[1,2,3,4,5].map((value) => (
+                  <button
+                    key={value}
+                    type="button"
+                    role="radio"
+                    aria-checked={rating === value}
+                    aria-label={`${value} star${value > 1 ? "s" : ""}`}
+                    onClick={() => setRating(value)}
+                    className="grid h-10 w-10 place-items-center rounded-xl transition hover:bg-white"
                   >
-                    #{tag}
-                  </span>
+                    <Star size={23} className={value <= rating ? "fill-[#e5ad32] text-[#e5ad32]" : "text-[#bbb5c3]"} />
+                  </button>
+                ))}
+                <span className="ml-2 text-sm font-bold text-textMuted">{rating}/5</span>
+              </div>
+
+              <label className="mt-5 block text-sm font-bold text-textMain" htmlFor="review-comment">Your thoughts</label>
+              <div className="mt-2 overflow-hidden rounded-2xl border border-borderSoft bg-white transition focus-within:border-primary/50 focus-within:ring-4 focus-within:ring-primary/10">
+                <textarea
+                  id="review-comment"
+                  value={comment}
+                  maxLength={500}
+                  onChange={(event) => setComment(event.target.value)}
+                  placeholder="What stood out to you?"
+                  className="min-h-32 w-full resize-none bg-transparent p-4 text-sm leading-6 outline-none placeholder:text-[#aaa5b1]"
+                />
+                <div className="flex items-center justify-between border-t border-borderSoft px-4 py-2 text-xs text-textMuted">
+                  <span>Be thoughtful and respectful</span>
+                  <span>{comment.length}/500</span>
+                </div>
+              </div>
+
+              <button type="submit" className="mt-5 inline-flex h-11 items-center gap-2 rounded-xl bg-primary px-5 text-sm font-bold text-white shadow-[0_9px_22px_rgba(118,87,211,.22)] transition hover:-translate-y-0.5">
+                <Send size={16} />
+                Post review
+              </button>
+              {actionMessage && <p className="mt-4 rounded-xl bg-white px-4 py-3 text-sm font-semibold text-primary">{actionMessage}</p>}
+            </form>
+
+            <div>
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="font-extrabold text-textMain">What readers say</h3>
+                <span className="rounded-full bg-soft px-3 py-1.5 text-xs font-bold text-primary">{reviews.length} total</span>
+              </div>
+              <div className="space-y-3">
+                {reviews.length === 0 && (
+                  <div className="grid min-h-48 place-items-center rounded-[24px] border border-dashed border-borderSoft bg-page p-6 text-center">
+                    <div><MessageSquareText className="mx-auto text-textMuted" size={30} /><p className="mt-3 font-bold text-textMain">No reviews yet</p><p className="mt-1 text-sm text-textMuted">Be the first reader to share a thought.</p></div>
+                  </div>
+                )}
+                {reviews.map((review) => (
+                  <article key={review.id} className="rounded-[22px] border border-borderSoft bg-white p-5 transition hover:border-primary/20 hover:shadow-soft">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex items-center gap-3">
+                        <span className="grid h-10 w-10 place-items-center rounded-full bg-soft text-primary"><UserRound size={19} /></span>
+                        <div><p className="text-sm font-bold text-textMain">EchoTale reader</p><p className="mt-0.5 text-xs text-textMuted">{review.created_at ? new Date(review.created_at).toLocaleDateString(undefined,{year:"numeric",month:"short",day:"numeric"}) : "Recently"}</p></div>
+                      </div>
+                      <div className="flex gap-0.5 text-[#e5ad32]">{[1,2,3,4,5].map((value)=><Star key={value} size={14} fill={value <= review.rating ? "currentColor" : "none"} className={value <= review.rating ? "text-[#e5ad32]" : "text-[#c8c3ce]"} />)}</div>
+                    </div>
+                    <p className="mt-4 text-sm leading-6 text-textMuted">{review.comment || "No written comment."}</p>
+                  </article>
                 ))}
               </div>
-            )}
-          </div>
-        </section>
-        <section className="rounded-[32px] bg-white p-6 shadow-soft">
-          <h2 className="text-2xl font-bold">Reviews</h2>
-          <form onSubmit={handleReview} className="mt-5 space-y-4 rounded-card bg-page p-5">
-            <label className="block font-semibold">
-              Rating
-              <select
-                value={rating}
-                onChange={(event) => setRating(Number(event.target.value))}
-                className="ml-3 rounded-xl border border-borderSoft bg-white px-3 py-2"
-              >
-                {[5, 4, 3, 2, 1].map((value) => <option key={value} value={value}>{value} stars</option>)}
-              </select>
-            </label>
-            <textarea
-              value={comment}
-              onChange={(event) => setComment(event.target.value)}
-              placeholder="Share your thoughts"
-              className="min-h-24 w-full rounded-2xl border border-borderSoft p-4"
-            />
-            <button type="submit" className="rounded-full bg-primary px-5 py-3 font-bold text-white">
-              Save review
-            </button>
-          </form>
-          {actionMessage && <p className="mt-4 text-sm font-semibold text-primary">{actionMessage}</p>}
-          <div className="mt-6 space-y-3">
-            {reviews.length === 0 && <p className="text-textMuted">No reviews yet.</p>}
-            {reviews.map((review) => (
-              <article key={review.id} className="rounded-card border border-borderSoft p-4">
-                <p className="font-bold">{review.rating} / 5</p>
-                <p className="mt-1 text-textMuted">{review.comment || "No comment"}</p>
-              </article>
-            ))}
+            </div>
           </div>
         </section>
       </div>
     </AppLayout>
   );
 }
+
+
+
+
+
+

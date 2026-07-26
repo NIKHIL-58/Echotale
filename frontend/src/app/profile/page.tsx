@@ -1,16 +1,20 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import {
   Camera,
+  CalendarDays,
   CheckCircle2,
   Crown,
   Edit3,
   Globe2,
   Heart,
   Loader2,
+  LogOut,
+  Mail,
   Save,
+  Sparkles,
   Target,
   User,
   X,
@@ -263,355 +267,116 @@ export default function ProfilePage() {
           </div>
         )}
 
-        <section className="relative overflow-hidden rounded-[32px] bg-white p-8 shadow-soft">
-          <div className="absolute right-0 top-0 h-48 w-48 rounded-full bg-soft blur-3xl" />
-
-          <div className="relative z-10 flex flex-col gap-8 md:flex-row md:items-center md:justify-between">
-            <div className="flex flex-col gap-6 md:flex-row md:items-center">
-              <div className="relative">
-                <div className="grid h-32 w-32 place-items-center overflow-hidden rounded-full bg-soft text-primary shadow-soft">
-                  {user.avatar ? (
-                    <img
-                      src={user.avatar}
-                      alt={user.name}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <User size={52} />
-                  )}
+        <section className="relative isolate overflow-hidden rounded-[30px] bg-[#0d0a22] p-6 text-white shadow-[0_24px_60px_rgba(24,17,51,.22)] sm:p-8">
+          <img src="/premium-story-world.png" alt="" className="absolute inset-0 -z-20 h-full w-full object-cover object-right opacity-25" />
+          <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#0d0a22] via-[#0d0a22]/95 to-[#0d0a22]/65" />
+          <div className="relative flex flex-col gap-7 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
+              <div className="relative shrink-0">
+                <div className="grid h-24 w-24 place-items-center overflow-hidden rounded-[26px] border-2 border-white/15 bg-white/10 text-[#e6be6d] shadow-2xl sm:h-28 sm:w-28">
+                  {user.avatar ? <img src={user.avatar} alt={user.name} className="h-full w-full object-cover" /> : <User size={42} />}
                 </div>
-
-                <button
-                  onClick={() => setEditOpen(true)}
-                  className="absolute bottom-1 right-1 grid h-10 w-10 place-items-center rounded-full bg-primary text-white shadow-card"
-                >
-                  <Camera size={18} />
-                </button>
+                <button onClick={() => setEditOpen(true)} aria-label="Change profile picture" title="Change profile picture" className="absolute -bottom-2 -right-2 grid h-9 w-9 place-items-center rounded-xl border-2 border-[#0d0a22] bg-[#e4ba65] text-[#241807] shadow-lg transition hover:scale-105"><Camera size={16} /></button>
               </div>
 
-              <div>
-                <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-soft px-4 py-2 text-sm font-bold text-primary">
-                  {user.is_premium ? (
-                    <>
-                      <Crown size={16} />
-                      Premium Member
-                    </>
-                  ) : (
-                    <>
-                      <User size={16} />
-                      Free Listener
-                    </>
-                  )}
+              <div className="min-w-0">
+                <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[.08] px-3 py-1.5 text-xs font-bold text-[#edcf91] backdrop-blur">
+                  {user.is_premium ? <><Crown size={14} /> Premium member</> : <><Sparkles size={14} /> EchoTale listener</>}
                 </div>
-
-                <h1 className="text-4xl font-extrabold text-textMain">
-                  {user.name}
-                </h1>
-
-                <p className="mt-2 text-textMuted">{user.email}</p>
-
-                <div className="mt-4 flex flex-wrap gap-3 text-sm text-textMuted">
-                  <span className="rounded-full bg-page px-4 py-2">
-                    {user.language || "English"}
-                  </span>
-
-                  <span className="rounded-full bg-page px-4 py-2">
-                    Goal: {user.listening_goal || 30} min/day
-                  </span>
-
-                  <span className="rounded-full bg-page px-4 py-2">
-                    Role: {user.role || "user"}
-                  </span>
+                <h1 className="truncate text-3xl font-black tracking-[-.04em] sm:text-4xl">{user.name}</h1>
+                <p className="mt-2 flex items-center gap-2 text-sm text-white/55"><Mail size={15} />{user.email}</p>
+                <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-xs font-semibold text-white/55">
+                  <span className="flex items-center gap-2"><Globe2 size={14} className="text-[#e4ba65]" />{user.language || "English"}</span>
+                  <span className="flex items-center gap-2"><Target size={14} className="text-[#e4ba65]" />{user.listening_goal || 30} min daily</span>
+                  {user.created_at && <span className="flex items-center gap-2"><CalendarDays size={14} className="text-[#e4ba65]" />Joined {new Date(user.created_at).getFullYear()}</span>}
                 </div>
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-3">
-              <button
-                onClick={() => setEditOpen(true)}
-                className="inline-flex h-[52px] items-center gap-2 rounded-2xl bg-primary px-6 py-4 font-bold text-white shadow-[0_12px_28px_rgba(108,77,246,0.25)]"
-              >
-                <Edit3 size={18} />
-                Edit Profile
-              </button>
-
-              <button
-                onClick={logout}
-                className="h-[52px] rounded-2xl border border-red-100 bg-red-50 px-6 py-4 font-bold text-red-600"
-              >
-                Logout
-              </button>
+            <div className="flex shrink-0 items-center gap-3">
+              <button onClick={() => setEditOpen(true)} aria-label="Edit profile" title="Edit profile" className="grid h-11 w-11 place-items-center rounded-xl bg-white text-[#241b45] shadow-xl transition hover:-translate-y-0.5 hover:bg-[#fff8e8]"><Edit3 size={18} /></button>
+              <button onClick={logout} aria-label="Log out" title="Log out" className="grid h-11 w-11 place-items-center rounded-xl border border-white/15 bg-white/[.08] text-white/70 transition hover:border-red-300/30 hover:bg-red-500/15 hover:text-red-200"><LogOut size={18} /></button>
             </div>
           </div>
         </section>
 
-        <section className="grid gap-5 md:grid-cols-3">
-          <div className="rounded-widget bg-white p-6 shadow-soft">
-            <div className="mb-5 grid h-12 w-12 place-items-center rounded-2xl bg-pink-100 text-pink-600">
-              <Heart size={24} />
+        <section className="grid gap-5 lg:grid-cols-[1.25fr_.75fr]">
+          <article className="rounded-[26px] border border-borderSoft bg-white p-6 shadow-soft sm:p-7">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex items-center gap-3"><span className="grid h-11 w-11 place-items-center rounded-2xl bg-[#fdebf3] text-[#d93d7d]"><Heart size={21} /></span><div><p className="text-xs font-bold uppercase tracking-[.14em] text-textMuted">Your taste</p><h2 className="mt-1 text-xl font-extrabold tracking-[-.02em]">Favorite genres</h2></div></div>
+              <button onClick={() => setEditOpen(true)} className="rounded-full bg-page px-3 py-1.5 text-xs font-bold text-primary transition hover:bg-soft">Manage</button>
             </div>
+            {user.favorite_genres?.length ? <div className="mt-6 flex flex-wrap gap-2">{user.favorite_genres.map((genre)=><span key={genre} className="rounded-full border border-primary/10 bg-soft px-4 py-2 text-sm font-bold text-primary">{genre}</span>)}</div> : <div className="mt-6 rounded-2xl border border-dashed border-borderSoft bg-page p-5 text-sm text-textMuted">Choose genres to improve your recommendations.</div>}
+          </article>
 
-            <h3 className="text-xl font-bold text-textMain">
-              Favorite Genres
-            </h3>
-
-            <p className="mt-2 text-textMuted">
-              {user.favorite_genres?.length
-                ? user.favorite_genres.join(", ")
-                : "No favorite genres selected yet."}
-            </p>
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-1">
+            <article className="flex items-center gap-4 rounded-[24px] border border-borderSoft bg-white p-5 shadow-soft">
+              <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[#e9f1ff] text-[#356fd0]"><Globe2 size={22} /></span>
+              <div><p className="text-xs font-bold uppercase tracking-[.12em] text-textMuted">Language</p><p className="mt-1 font-extrabold text-textMain">{user.language || "English"}</p><p className="mt-1 text-xs text-textMuted">Preferred narration</p></div>
+            </article>
+            <article className="flex items-center gap-4 rounded-[24px] border border-borderSoft bg-white p-5 shadow-soft">
+              <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[#fff0dd] text-[#db742b]"><Target size={22} /></span>
+              <div><p className="text-xs font-bold uppercase tracking-[.12em] text-textMuted">Daily goal</p><p className="mt-1 font-extrabold text-textMain">{user.listening_goal || 30} minutes</p><p className="mt-1 text-xs text-textMuted">Keep your listening streak</p></div>
+            </article>
           </div>
-
-          <div className="rounded-widget bg-white p-6 shadow-soft">
-            <div className="mb-5 grid h-12 w-12 place-items-center rounded-2xl bg-blue-100 text-blue-600">
-              <Globe2 size={24} />
-            </div>
-
-            <h3 className="text-xl font-bold text-textMain">Language</h3>
-
-            <p className="mt-2 text-textMuted">
-              Listening language: {user.language || "English"}
-            </p>
-          </div>
-
-          <div className="rounded-widget bg-white p-6 shadow-soft">
-            <div className="mb-5 grid h-12 w-12 place-items-center rounded-2xl bg-orange-100 text-orange-600">
-              <Target size={24} />
-            </div>
-
-            <h3 className="text-xl font-bold text-textMain">
-              Listening Goal
-            </h3>
-
-            <p className="mt-2 text-textMuted">
-              {user.listening_goal || 30} minutes per day
-            </p>
-          </div>
-        </section>
-      </div>
+        </section>      </div>
 
       {editOpen && (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4 backdrop-blur-sm">
-          <form
-            onSubmit={updateProfile}
-            className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-[32px] bg-white p-6 shadow-[0_24px_80px_rgba(16,20,45,0.25)]"
-          >
-            <div className="mb-6 flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl font-extrabold text-textMain">
-                  Edit Profile
-                </h2>
-
-                <p className="mt-1 text-sm text-textMuted">
-                  Update your personal listening details.
-                </p>
+        <div className="fixed inset-0 z-50 grid place-items-center bg-[#080615]/70 p-3 backdrop-blur-md sm:p-6">
+          <form onSubmit={updateProfile} className="flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-[28px] border border-white/10 bg-white shadow-[0_30px_100px_rgba(8,5,25,.45)]">
+            <header className="flex shrink-0 items-center justify-between bg-[#0d0a22] px-5 py-5 text-white sm:px-7">
+              <div className="flex items-center gap-3">
+                <span className="grid h-10 w-10 place-items-center rounded-xl bg-white/10 text-[#e5bd6b]"><Edit3 size={18} /></span>
+                <div><h2 className="text-xl font-extrabold tracking-[-.02em]">Edit profile</h2><p className="mt-0.5 text-xs text-white/50">Personalize your EchoTale experience</p></div>
               </div>
+              <button type="button" onClick={() => setEditOpen(false)} aria-label="Close edit profile" className="grid h-9 w-9 place-items-center rounded-xl bg-white/[.08] text-white/65 transition hover:bg-white/15 hover:text-white"><X size={18} /></button>
+            </header>
 
-              <button
-                type="button"
-                onClick={() => setEditOpen(false)}
-                className="grid h-10 w-10 place-items-center rounded-full bg-page text-textMuted"
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <div className="space-y-5">
-              <div>
-                <label className="mb-2 block text-sm font-bold text-textMain">
-                  Full name
-                </label>
-
-                <input
-                  value={form.name}
-                  onChange={(e) =>
-                    setForm((prev) => ({
-                      ...prev,
-                      name: e.target.value,
-                    }))
-                  }
-                  className="h-12 w-full rounded-2xl border border-borderSoft px-4 outline-none focus:border-primary"
-                />
-              </div>
-
-              <div>
+            <div className="flex-1 overflow-y-auto p-5 sm:p-7">
+              <section>
                 <div className="mb-4 flex items-center justify-between gap-4">
+                  <div><h3 className="font-extrabold text-textMain">Profile details</h3><p className="mt-1 text-xs text-textMuted">Choose your display name and avatar.</p></div>
+                  <button type="button" onClick={() => setShowCustomAvatar((prev) => !prev)} className="shrink-0 rounded-xl border border-borderSoft bg-page px-3 py-2 text-xs font-bold text-primary transition hover:bg-soft">{showCustomAvatar ? "Hide URL" : "Use image URL"}</button>
+                </div>
+
+                <div className="grid gap-5 rounded-[22px] border border-borderSoft bg-page p-4 sm:grid-cols-[1fr_1.45fr] sm:p-5">
                   <div>
-                    <label className="block text-sm font-bold text-textMain">
-                      Profile avatar
-                    </label>
-
-                    <p className="mt-1 text-xs text-textMuted">
-                      Pick a visual identity for your EchoTale profile.
-                    </p>
+                    <label className="mb-2 block text-xs font-bold uppercase tracking-[.1em] text-textMuted">Full name</label>
+                    <input value={form.name} onChange={(e)=>setForm((prev)=>({...prev,name:e.target.value}))} className="h-11 w-full rounded-xl border border-borderSoft bg-white px-4 text-sm outline-none transition focus:border-primary/50 focus:ring-4 focus:ring-primary/10" />
+                    {showCustomAvatar && <div className="mt-4"><label className="mb-2 block text-xs font-bold uppercase tracking-[.1em] text-textMuted">Avatar URL</label><input value={form.avatar} onChange={(e)=>setForm((prev)=>({...prev,avatar:e.target.value}))} placeholder="https://..." className="h-11 w-full rounded-xl border border-borderSoft bg-white px-4 text-sm outline-none transition focus:border-primary/50 focus:ring-4 focus:ring-primary/10" /></div>}
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => setShowCustomAvatar((prev) => !prev)}
-                    className="shrink-0 rounded-full bg-soft px-4 py-2 text-xs font-bold text-primary transition hover:bg-primary hover:text-white"
-                  >
-                    {showCustomAvatar ? "Hide URL" : "Use URL"}
-                  </button>
-                </div>
-
-                <div className="rounded-[28px] border border-borderSoft bg-page p-4">
-                  <div className="grid grid-cols-4 gap-4 sm:grid-cols-6">
-                    {avatarOptions.map((avatar, index) => {
-                      const selected = form.avatar === avatar.url;
-
-                      return (
-                        <button
-                          key={avatar.url}
-                          type="button"
-                          onClick={() =>
-                            setForm((prev) => ({
-                              ...prev,
-                              avatar: avatar.url,
-                            }))
-                          }
-                          className={`group relative rounded-[24px] p-2 transition ${
-                            selected
-                              ? "bg-white shadow-[0_14px_34px_rgba(108,77,246,0.28)] ring-2 ring-primary"
-                              : "hover:bg-white hover:shadow-soft"
-                          }`}
-                          aria-label={`Select avatar ${index + 1}`}
-                        >
-                          <img
-                            src={avatar.url}
-                            alt={`Avatar ${index + 1}`}
-                            className="h-20 w-full rounded-[20px] object-cover"
-                          />
-
-                          {selected && (
-                            <span className="absolute right-1 top-1 grid h-7 w-7 place-items-center rounded-full bg-primary text-sm font-bold text-white ring-2 ring-white">
-                              ✓
-                            </span>
-                          )}
-                        </button>
-                      );
-                    })}
+                  <div>
+                    <label className="mb-2 block text-xs font-bold uppercase tracking-[.1em] text-textMuted">Choose avatar</label>
+                    <div className="grid grid-cols-6 gap-2.5">
+                      {avatarOptions.map((avatar,index)=>{const selected=form.avatar===avatar.url;return <button key={avatar.url} type="button" onClick={()=>setForm((prev)=>({...prev,avatar:avatar.url}))} aria-label={`Select avatar ${index+1}`} className={`relative aspect-square overflow-hidden rounded-xl border-2 bg-white p-1 transition hover:-translate-y-0.5 ${selected?"border-primary shadow-[0_7px_18px_rgba(118,87,211,.2)]":"border-transparent hover:border-primary/20"}`}><img src={avatar.url} alt="" className="h-full w-full rounded-lg object-cover" />{selected&&<span className="absolute right-0.5 top-0.5 grid h-5 w-5 place-items-center rounded-full bg-primary text-white ring-2 ring-white"><CheckCircle2 size={12} /></span>}</button>})}
+                    </div>
                   </div>
                 </div>
+              </section>
 
-                {showCustomAvatar && (
-                  <div className="mt-5 rounded-3xl border border-borderSoft bg-page p-4">
-                    <label className="mb-2 block text-sm font-bold text-textMain">
-                      Custom avatar URL
-                    </label>
-
-                    <input
-                      value={form.avatar}
-                      onChange={(e) =>
-                        setForm((prev) => ({
-                          ...prev,
-                          avatar: e.target.value,
-                        }))
-                      }
-                      placeholder="Paste image URL here"
-                      className="h-12 w-full rounded-2xl border border-borderSoft bg-white px-4 text-sm outline-none focus:border-primary"
-                    />
-
-                    <p className="mt-2 text-xs text-textMuted">
-                      Use a direct image URL ending in .jpg, .png, .webp, or
-                      .svg.
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              <div className="grid gap-4 md:grid-cols-2">
-                <div>
-                  <label className="mb-2 block text-sm font-bold text-textMain">
-                    Language
-                  </label>
-
-                  <select
-                    value={form.language}
-                    onChange={(e) =>
-                      setForm((prev) => ({
-                        ...prev,
-                        language: e.target.value,
-                      }))
-                    }
-                    className="h-12 w-full rounded-2xl border border-borderSoft px-4 outline-none focus:border-primary"
-                  >
-                    <option>English</option>
-                    <option>Hindi</option>
-                    <option>Spanish</option>
-                    <option>French</option>
-                  </select>
+              <section className="mt-7">
+                <div className="mb-4"><h3 className="font-extrabold text-textMain">Listening preferences</h3><p className="mt-1 text-xs text-textMuted">Used to personalize stories and recommendations.</p></div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <label className="rounded-[20px] border border-borderSoft bg-white p-4"><span className="mb-3 flex items-center gap-2 text-sm font-bold text-textMain"><Globe2 size={17} className="text-primary" />Language</span><select value={form.language} onChange={(e)=>setForm((prev)=>({...prev,language:e.target.value}))} className="h-11 w-full rounded-xl border border-borderSoft bg-page px-3 text-sm outline-none focus:border-primary"><option>English</option><option>Hindi</option><option>Spanish</option><option>French</option></select></label>
+                  <label className="rounded-[20px] border border-borderSoft bg-white p-4"><span className="mb-3 flex items-center gap-2 text-sm font-bold text-textMain"><Target size={17} className="text-primary" />Daily listening goal</span><div className="relative"><input type="number" min={5} max={240} value={form.listening_goal} onChange={(e)=>setForm((prev)=>({...prev,listening_goal:Number(e.target.value)}))} className="h-11 w-full rounded-xl border border-borderSoft bg-page px-3 pr-20 text-sm outline-none focus:border-primary" /><span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-textMuted">minutes</span></div></label>
                 </div>
+              </section>
 
-                <div>
-                  <label className="mb-2 block text-sm font-bold text-textMain">
-                    Daily goal
-                  </label>
-
-                  <input
-                    type="number"
-                    min={5}
-                    max={240}
-                    value={form.listening_goal}
-                    onChange={(e) =>
-                      setForm((prev) => ({
-                        ...prev,
-                        listening_goal: Number(e.target.value),
-                      }))
-                    }
-                    className="h-12 w-full rounded-2xl border border-borderSoft px-4 outline-none focus:border-primary"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="mb-3 block text-sm font-bold text-textMain">
-                  Favorite genres
-                </label>
-
-                <div className="flex flex-wrap gap-2">
-                  {genreOptions.map((genre) => {
-                    const active = form.favorite_genres.includes(genre);
-
-                    return (
-                      <button
-                        key={genre}
-                        type="button"
-                        onClick={() => toggleGenre(genre)}
-                        className={`rounded-full px-4 py-2 text-sm font-bold transition ${
-                          active
-                            ? "bg-primary text-white"
-                            : "bg-page text-textMuted hover:bg-soft hover:text-primary"
-                        }`}
-                      >
-                        {genre}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
+              <section className="mt-7">
+                <h3 className="font-extrabold text-textMain">Favorite genres</h3><p className="mt-1 text-xs text-textMuted">Select all that match your taste.</p>
+                <div className="mt-4 flex flex-wrap gap-2">{genreOptions.map((genre)=>{const active=form.favorite_genres.includes(genre);return <button key={genre} type="button" onClick={()=>toggleGenre(genre)} className={`inline-flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-sm font-bold transition ${active?"border-primary bg-soft text-primary":"border-borderSoft bg-white text-textMuted hover:border-primary/25 hover:text-textMain"}`}>{active&&<CheckCircle2 size={14} />}{genre}</button>})}</div>
+              </section>
             </div>
 
-            <button
-              type="submit"
-              disabled={saving}
-              className="mt-7 inline-flex h-[52px] w-full items-center justify-center gap-2 rounded-2xl bg-primary px-6 py-4 font-bold text-white shadow-[0_12px_28px_rgba(108,77,246,0.25)]"
-            >
-              {saving ? (
-                <>
-                  <Loader2 className="animate-spin" size={20} />
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <Save size={20} />
-                  Save Profile
-                </>
-              )}
-            </button>
+            <footer className="flex shrink-0 items-center justify-end gap-3 border-t border-borderSoft bg-white px-5 py-4 sm:px-7">
+              <button type="button" onClick={() => setEditOpen(false)} className="h-10 rounded-xl px-4 text-sm font-bold text-textMuted transition hover:bg-page hover:text-textMain">Cancel</button>
+              <button type="submit" disabled={saving} className="inline-flex h-10 items-center gap-2 rounded-xl bg-primary px-5 text-sm font-bold text-white shadow-[0_8px_20px_rgba(118,87,211,.2)] disabled:opacity-60">{saving?<><Loader2 className="animate-spin" size={16} />Saving...</>:<><Save size={16} />Save changes</>}</button>
+            </footer>
           </form>
         </div>
       )}
     </AppLayout>
   );
 }
+

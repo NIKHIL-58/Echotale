@@ -1,45 +1,41 @@
 ﻿"use client";
 
 import Link from "next/link";
-import { ArrowRight, Star } from "lucide-react";
+import { ArrowRight, BookOpen, Headphones, Star } from "lucide-react";
 
 export function HeroBanner() {
   return (
-    <section className="relative overflow-hidden rounded-[28px] bg-[#0b0920] px-6 py-10 text-white shadow-[0_24px_55px_rgba(26,16,72,.18)] sm:px-9 md:min-h-[390px] md:px-12 md:py-14">
+    <section className="relative overflow-hidden rounded-[26px] bg-[#0b0920] px-6 py-8 text-white shadow-[0_22px_50px_rgba(26,16,72,.16)] sm:px-9 md:min-h-[330px] md:px-11 md:py-10">
       <div
         className="absolute inset-0"
         style={{
           backgroundImage:
-            "linear-gradient(90deg, rgba(8,6,25,.98) 0%, rgba(10,7,31,.88) 43%, rgba(10,7,31,.15) 78%), url('/premium-story-world.png')",
+            "linear-gradient(90deg, rgba(8,6,25,.99) 0%, rgba(10,7,31,.91) 44%, rgba(10,7,31,.2) 76%), url('/premium-story-world.png')",
           backgroundSize: "cover",
           backgroundPosition: "center right",
         }}
       />
-
-      <div className="relative z-10 max-w-2xl">
-        <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-bold uppercase tracking-[.12em] backdrop-blur">
-          <Star size={16} className="fill-[#e7bd69] text-[#e7bd69]" />
+      <div className="relative z-10 max-w-[620px]">
+        <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[.14em] backdrop-blur">
+          <Star size={14} className="fill-[#e7bd69] text-[#e7bd69]" />
           Editor&apos;s Pick
         </div>
-
-        <h1 className="max-w-xl text-4xl font-extrabold leading-[1.05] tracking-[-.045em] sm:text-5xl md:text-6xl">
+        <h1 className="max-w-xl text-4xl font-extrabold leading-[1.02] tracking-[-.045em] sm:text-[50px]">
           A world of stories, made to be heard.
         </h1>
-
-        <p className="mt-5 max-w-lg text-base leading-7 text-white/70 sm:text-lg">
+        <p className="mt-4 max-w-lg text-sm leading-6 text-white/70 sm:text-base">
           Discover immersive audiobooks, save your favorites, and pick up exactly where you left off.
         </p>
-
-        <Link
-          href="/explore"
-          className="mt-8 inline-flex items-center justify-center gap-3 rounded-[14px] bg-gradient-to-r from-[#f8df9a] to-[#dcae54] px-6 py-3.5 text-sm font-extrabold text-[#241807] shadow-[0_14px_32px_rgba(0,0,0,.2)] transition hover:-translate-y-0.5 hover:brightness-105"
-        >
-          Explore Now
-          <ArrowRight size={24} />
-        </Link>
+        <div className="mt-6 flex flex-wrap items-center gap-4">
+          <Link href="/explore" className="inline-flex h-11 items-center justify-center gap-2.5 rounded-[13px] bg-gradient-to-r from-[#f8df9a] to-[#dcae54] px-5 text-sm font-extrabold text-[#241807] shadow-[0_12px_28px_rgba(0,0,0,.2)] transition hover:-translate-y-0.5 hover:brightness-105">
+            Explore stories <ArrowRight size={18} />
+          </Link>
+          <div className="hidden items-center gap-4 text-xs font-semibold text-white/65 sm:flex">
+            <span className="inline-flex items-center gap-1.5"><BookOpen size={15} /> Curated library</span>
+            <span className="inline-flex items-center gap-1.5"><Headphones size={15} /> Listen anywhere</span>
+          </div>
+        </div>
       </div>
     </section>
   );
 }
-
-

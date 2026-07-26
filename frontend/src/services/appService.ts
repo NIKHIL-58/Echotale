@@ -1,4 +1,4 @@
-import type { AxiosResponse } from "axios";
+﻿import type { AxiosResponse } from "axios";
 import { apiClient } from "@/lib/axios";
 import type { Story } from "@/services/storyService";
 
@@ -153,7 +153,11 @@ export async function getCurrentSubscription(): Promise<Subscription | null> {
 export async function choosePlan(planId: string): Promise<Subscription> {
   return unwrap(await apiClient.post("/subscriptions/subscribe/", {
     plan_id: planId,
-    payment_id: process.env.NODE_ENV === "development" ? "dev_local" : "",
+    payment_id:
+      typeof window !== "undefined" &&
+      ["localhost", "127.0.0.1"].includes(window.location.hostname)
+        ? "dev_local"
+        : "",
   }));
 }
 
@@ -183,3 +187,4 @@ export function resolveStories(
     .map((entry) => byId.get(entry.story_id))
     .filter((story): story is Story => Boolean(story));
 }
+
