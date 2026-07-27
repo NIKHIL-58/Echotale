@@ -1,57 +1,21 @@
-"use client";
-
-import { FormEvent, useEffect, useMemo, useState } from "react";
+﻿"use client";
+import { FormEvent,useEffect,useMemo,useState } from "react";
+import { BookMarked,Database,Library,Loader2,Search,Sparkles } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { StoryGridCard } from "@/components/stories/StoryGridCard";
-import { getStories, type Story } from "@/services/storyService";
-
-export default function SearchPage() {
-  const [query, setQuery] = useState("");
-  const [activeQuery, setActiveQuery] = useState("");
-  const [stories, setStories] = useState<Story[]>([]);
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const initialQuery = params.get("search") || params.get("q") || "";
-    setQuery(initialQuery);
-    setActiveQuery(initialQuery);
-    getStories().then(setStories).catch(() => setStories([]));
-  }, []);
-
-  const results = useMemo(() => {
-    const normalized = activeQuery.trim().toLowerCase();
-    if (!normalized) return [];
-    return stories.filter((story) =>
-      [story.title, story.author, story.category, story.description]
-        .some((value) => value?.toLowerCase().includes(normalized)),
-    );
-  }, [stories, activeQuery]);
-
-  function submit(event: FormEvent) {
-    event.preventDefault();
-    setActiveQuery(query);
-  }
-
-  return (
-    <AppLayout>
-      <h1 className="text-3xl font-bold">Search</h1>
-      <form onSubmit={submit} className="mt-5 rounded-widget bg-white p-5 shadow-soft">
-        <SearchInput value={query} onChange={(event) => setQuery(event.target.value)} />
-      </form>
-      {!activeQuery ? (
-        <p className="mt-6 rounded-widget bg-white p-6 text-textMuted shadow-soft">
-          Enter a title, author, category, or keyword.
-        </p>
-      ) : results.length === 0 ? (
-        <p className="mt-6 rounded-widget bg-white p-6 text-textMuted shadow-soft">
-          No results found for ?{activeQuery}?.
-        </p>
-      ) : (
-        <div className="mt-6 grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
-          {results.map((story) => <StoryGridCard key={story.id} story={story} />)}
-        </div>
-      )}
-    </AppLayout>
-  );
-}
+import { LibraryBookCard } from "@/components/search/LibraryBookCard";
+import { searchOpenLibrary,type LibraryBook } from "@/services/libraryService";
+import { getStories,type Story } from "@/services/storyService";
+export default function SearchPage(){
+ const [query,setQuery]=useState("");const [active,setActive]=useState("");const [stories,setStories]=useState<Story[]>([]);const [books,setBooks]=useState<LibraryBook[]>([]);const [suggestions,setSuggestions]=useState<string[]>([]);const [loading,setLoading]=useState(false);const [warning,setWarning]=useState("");
+ useEffect(()=>{getStories().then(setStories).catch(()=>setStories([]));const initial=new URLSearchParams(location.search).get("search")||new URLSearchParams(location.search).get("q")||"";if(initial){setQuery(initial);run(initial)}},[]);
+ const local=useMemo(()=>{const q=active.toLowerCase();return q?stories.filter(s=>[s.title,s.author,s.category,s.description,...(s.tags||[])].some(v=>v?.toLowerCase().includes(q))):[]},[stories,active]);
+ async function run(value:string){const q=value.trim();if(q.length<2)return;setActive(q);setLoading(true);setWarning("");history.replaceState(null,"",`/search?q=${encodeURIComponent(q)}`);try{const data=await searchOpenLibrary(q);setBooks(data.books);setSuggestions(data.suggestions);setWarning(data.warning||"")}catch{setBooks([]);setSuggestions([]);setWarning("The free library could not be reached. Your EchoTale results are still available.")}finally{setLoading(false)}}
+ function submit(e:FormEvent){e.preventDefault();run(query)}function related(q:string){setQuery(q);run(q);scrollTo({top:0,behavior:"smooth"})}
+ return <AppLayout rightPanel={false}><div className="pb-10"><header className="overflow-hidden rounded-[24px] bg-[#17112f] px-6 py-7 text-white shadow-[0_18px_45px_rgba(23,17,47,.15)] sm:px-8"><div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[.15em] text-[#e8c77e]"><Sparkles size={15}/>Discover beyond your library</div><h1 className="mt-3 text-3xl font-extrabold tracking-[-.04em] sm:text-4xl">Find your next great book</h1><p className="mt-2 max-w-2xl text-sm leading-6 text-white/60">Search EchoTale and millions of library records. Free reading and PDF options appear only when a public scan is available.</p><form onSubmit={submit} className="mt-5 flex max-w-3xl gap-2 rounded-2xl bg-white p-2"><SearchInput value={query} onChange={e=>setQuery(e.target.value)} className="flex-1"/><button disabled={loading||query.trim().length<2} className="inline-flex min-w-24 items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-bold text-white disabled:opacity-50">{loading?<Loader2 size={17} className="animate-spin"/>:<Search size={17}/>}Search</button></form></header>
+ {!active?<div className="mt-6 rounded-2xl border border-borderSoft bg-white p-8 text-center"><BookMarked className="mx-auto text-primary" size={28}/><h2 className="mt-3 font-extrabold">Search by title, author, or topic</h2><p className="mt-1 text-sm text-textMuted">Try “Pride and Prejudice”, “science fiction”, or an author name.</p></div>:<><div className="mt-6"><h2 className="text-2xl font-extrabold tracking-tight">Results for “{active}”</h2><p className="mt-1 text-sm text-textMuted">{loading?"Searching the free library...":`${local.length+books.length} results across EchoTale and Open Library`}</p></div>{warning&&<p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">{warning}</p>}
+ {local.length>0&&<ResultSection icon={<Database size={18}/>} title="In your EchoTale library" subtitle="Uploaded stories and generated audiobooks"><div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{local.map(s=><StoryGridCard key={s.id} story={s}/>)}</div></ResultSection>}
+ <ResultSection icon={<Library size={18}/>} title="Free library catalog" subtitle="Book details and public reading from Open Library">{loading?<div className="grid min-h-40 place-items-center rounded-2xl border border-borderSoft bg-white"><Loader2 size={26} className="animate-spin text-primary"/></div>:books.length?<div className="grid gap-4 lg:grid-cols-2">{books.map(b=><LibraryBookCard key={b.id} book={b}/>)}</div>:<div className="rounded-2xl border border-borderSoft bg-white p-7 text-center text-sm text-textMuted">No external library books found.</div>}</ResultSection>
+ {suggestions.length>0&&<section className="mt-8 rounded-2xl border border-borderSoft bg-white p-5"><h2 className="flex items-center gap-2 font-extrabold"><Sparkles size={17} className="text-primary"/>Related searches</h2><div className="mt-3 flex flex-wrap gap-2">{suggestions.map(s=><button key={s} onClick={()=>related(s)} className="rounded-full border border-primary/10 bg-soft px-3.5 py-2 text-xs font-bold text-primary hover:bg-primary hover:text-white">{s}</button>)}</div></section>}</>}</div></AppLayout>}
+function ResultSection({icon,title,subtitle,children}:{icon:React.ReactNode;title:string;subtitle:string;children:React.ReactNode}){return <section className="mt-8"><div className="mb-4 flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-xl bg-soft text-primary">{icon}</span><div><h2 className="text-lg font-extrabold">{title}</h2><p className="text-xs text-textMuted">{subtitle}</p></div></div>{children}</section>}

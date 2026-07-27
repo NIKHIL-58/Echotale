@@ -15,6 +15,7 @@ import { getStoredUser, getToken, logoutUser } from "@/lib/auth";
 import { getMediaUrl } from "@/services/storyService";
 import { API_URL } from "@/lib/api";
 import { getHistory } from "@/lib/userLists";
+import { HeaderBookSearch } from "@/components/search/HeaderBookSearch";
 
 type AuthUser = {
   id: string;
@@ -142,19 +143,7 @@ export function Topbar() {
 
   return (
     <header className="mx-auto flex max-w-[1600px] items-center justify-between gap-3 sm:gap-6">
-      <form
-        onSubmit={handleSearchSubmit}
-        className="flex h-12 w-full max-w-[620px] items-center gap-3 rounded-2xl border border-[#e8e6ef] bg-white/90 px-4 shadow-[0_6px_24px_rgba(31,25,61,.05)] transition focus-within:border-primary/40 focus-within:ring-4 focus-within:ring-primary/10 sm:h-14 sm:px-5"
-      >
-        <Search className="text-[#6E6A7C]" size={24} />
-
-        <input
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search your next great listen..."
-          className="w-full bg-transparent text-base outline-none placeholder:text-[#98A2B3]"
-        />
-      </form>
+      <HeaderBookSearch />
 
       <div className="relative flex items-center gap-2 sm:gap-3">
         <button
@@ -276,4 +265,6 @@ export function Topbar() {
     </header>
   );
 }
+
+
 
