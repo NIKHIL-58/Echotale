@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
@@ -389,6 +389,8 @@ export default function StoryDetailPage() {
               )}
             </section>
 
+        <OfflineDownloadManager story={story} />
+
         <section className="overflow-hidden rounded-[30px] border border-borderSoft bg-white shadow-soft">
           <div className="flex flex-col gap-4 border-b border-borderSoft px-6 py-6 sm:flex-row sm:items-center sm:justify-between sm:px-8">
             <div className="flex items-center gap-3">
@@ -481,6 +483,7 @@ export default function StoryDetailPage() {
     </AppLayout>
   );
 }
+
 
 
 

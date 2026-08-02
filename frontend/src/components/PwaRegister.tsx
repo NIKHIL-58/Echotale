@@ -1,8 +1,9 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import { RefreshCw, Wifi, WifiOff, X } from "lucide-react";
 import { syncPendingProgress } from "@/services/playbackService";
+import { syncOfflineLibrary } from "@/services/offlineService";
 
 export function PwaRegister() {
   const [online, setOnline] = useState(true);
@@ -12,7 +13,7 @@ export function PwaRegister() {
   useEffect(() => {
     setOnline(navigator.onLine);
     const handleOffline = () => { setOnline(false); setShowRestored(false); };
-    const handleOnline = () => { syncPendingProgress().catch(() => undefined); setOnline(true); setShowRestored(true); window.setTimeout(() => setShowRestored(false), 3500); };
+    const handleOnline = () => { Promise.allSettled([syncPendingProgress(), syncOfflineLibrary()]); setOnline(true); setShowRestored(true); window.setTimeout(() => setShowRestored(false), 3500); };
     window.addEventListener("offline", handleOffline);
     window.addEventListener("online", handleOnline);
 
@@ -42,5 +43,6 @@ export function PwaRegister() {
   if (showRestored) return <div role="status" className="fixed left-1/2 top-4 z-[100] flex -translate-x-1/2 items-center gap-3 rounded-full bg-emerald-700 px-5 py-3 text-sm font-bold text-white shadow-2xl"><Wifi className="h-4 w-4"/>Back online<button aria-label="Dismiss" onClick={()=>setShowRestored(false)}><X className="h-4 w-4"/></button></div>;
   return null;
 }
+
 
 
