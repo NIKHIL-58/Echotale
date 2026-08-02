@@ -147,3 +147,23 @@ export async function regenerateAudioParts(storyId: string, voice = "alloy") {
 
   return data.data;
 }
+
+export type StoryInsights = {
+  summary: string;
+  key_points: string[];
+  themes: string[];
+  questions: { question: string; answer: string }[];
+  generated_by?: "ai" | "local";
+  generated_at?: string;
+};
+
+export async function getStoryInsights(storyId: string, regenerate = false): Promise<StoryInsights> {
+  const res = await fetch(`${API_URL}/stories/${storyId}/insights/`, {
+    method: regenerate ? "POST" : "GET",
+    cache: "no-store",
+    headers: authHeaders(),
+  });
+  const payload = await res.json();
+  if (!res.ok || !payload.success) throw new Error(payload.message || "Unable to generate story insights");
+  return payload.data;
+}

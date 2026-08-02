@@ -9,6 +9,7 @@ from mongoengine import (
     ListField,
     DateTimeField,
     EmbeddedDocumentListField,
+    DictField,
 )
 
 
@@ -48,6 +49,7 @@ class StoryDocument(Document):
     audio_status = StringField(default="not_generated")
     audio_error = StringField(default="")
     voice = StringField(default="alloy")
+    insights = DictField(default=dict)
 
     created_at = DateTimeField(default=datetime.utcnow)
     updated_at = DateTimeField(default=datetime.utcnow)

@@ -1,7 +1,11 @@
 import os
 import re
+import json
+from collections import Counter
 import tempfile
 import threading
+import subprocess
+import shutil
 from datetime import datetime
 
 import fitz
@@ -86,7 +90,7 @@ def clean_story_title(title, original_filename=""):
         return filename_title or "Untitled Story"
 
     title = re.sub(r"learn english through story", "", title, flags=re.IGNORECASE)
-    title = re.sub(r"level\s*\d+[-–]\d+", "", title, flags=re.IGNORECASE)
+    title = re.sub(r"level\s*\d+[-ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“]\d+", "", title, flags=re.IGNORECASE)
     title = re.sub(r"https?://\S+", "", title)
     title = re.sub(r"www\.\S+", "", title)
     title = re.sub(r"\s+", " ", title).strip()
@@ -102,7 +106,7 @@ def clean_story_description(description):
 
     remove_patterns = [
         r"learn english through story",
-        r"level\s*\d+[-–]\d+",
+        r"level\s*\d+[-ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“]\d+",
         r"hope you have enjoyed the reading",
         r"come back to.*",
         r"https?://\S+",
@@ -140,7 +144,7 @@ def clean_text_for_tts(text):
     lines = []
     skip_patterns = [
         r"learn english through story",
-        r"level\s*\d+[-–]\d+",
+        r"level\s*\d+[-ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“]\d+",
         r"hope you have enjoyed the reading",
         r"come back to",
         r"https?://",
@@ -187,6 +191,53 @@ def clean_text_for_tts(text):
 
     return cleaned
 
+
+def text_extraction_is_corrupt(text):
+    """Detect broken ToUnicode mappings commonly found in older Hindi PDFs."""
+    if not text or len(text.strip()) < 30:
+        return False
+    devanagari = sum(1 for char in text if "\u0900" <= char <= "\u097f")
+    suspicious = sum(1 for char in text if "\u0180" <= char <= "\u02ff")
+    replacement = text.count("ï¿½")
+    return replacement > 1 or suspicious >= 4 or (devanagari > 10 and suspicious > devanagari * 0.04)
+
+
+def ocr_page_text(page, languages="hin+eng"):
+    """OCR one rendered page when its embedded Unicode mapping is unreliable."""
+    executable = os.getenv("TESSERACT_CMD") or shutil.which("tesseract")
+    tessdata = os.path.join(settings.BASE_DIR, "ocr_data")
+    if not executable or not os.path.exists(os.path.join(tessdata, "hin.traineddata")):
+        return ""
+    image_path = ""
+    try:
+        temp_image = tempfile.NamedTemporaryFile(delete=False, suffix=".png")
+        image_path = temp_image.name
+        temp_image.close()
+        page.get_pixmap(matrix=fitz.Matrix(2.0, 2.0), alpha=False).save(image_path)
+        process = subprocess.run(
+            [executable, image_path, "stdout", "-l", languages, "--tessdata-dir", tessdata, "--psm", "6"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            timeout=45,
+            check=False,
+        )
+        return process.stdout.decode("utf-8", errors="replace").strip() if process.returncode == 0 else ""
+    except Exception as exc:
+        print("HINDI OCR FAILED:", exc)
+        return ""
+    finally:
+        if image_path and os.path.exists(image_path):
+            try: os.remove(image_path)
+            except Exception: pass
+
+
+def extract_page_text(page):
+    embedded = page.get_text("text").strip()
+    if text_extraction_is_corrupt(embedded):
+        corrected = ocr_page_text(page)
+        if len(corrected) >= max(30, int(len(embedded) * 0.45)):
+            return corrected
+    return embedded
 
 def save_uploaded_file(file_obj, folder):
     if not file_obj:
@@ -252,10 +303,10 @@ def extract_pdf_info(book_url, original_filename):
         max_pages_for_preview = min(10, len(doc))
 
         for page_index in range(max_pages_for_preview):
-            page_text = doc[page_index].get_text("text").strip()
+            page_text = extract_page_text(doc[page_index])
 
             if page_text:
-                if not first_text:
+                if not first_text and len(re.sub(r"\s+", "", page_text)) >= 80:
                     first_text = page_text
 
                 all_text_parts.append(page_text)
@@ -332,7 +383,7 @@ def extract_pdf_full_text(book_url, max_pages=100):
         text_parts = []
 
         for page_index in range(min(max_pages, len(doc))):
-            page_text = doc[page_index].get_text("text").strip()
+            page_text = extract_page_text(doc[page_index])
 
             if page_text:
                 text_parts.append(page_text)
@@ -748,3 +799,71 @@ def regenerate_story_audio_parts(request, story_id):
         story_to_dict(story, request.user),
         "Audio regeneration has started.",
     )
+
+
+def _fallback_story_insights(story, source_text):
+    text = re.sub(r"\s+", " ", source_text or story.description or "").strip()
+    sentences = [s.strip() for s in re.split(r"(?<=[.!?])\s+", text) if len(s.strip()) > 35]
+    summary = " ".join(sentences[:5])[:1800]
+    if not summary:
+        summary = f"{story.title} by {story.author} is a {story.category.lower()} story. Open the book to explore its characters, events, and central ideas."
+    stop = {"this","that","with","from","have","were","their","there","about","which","would","could","into","when","what","your","story","book","they","them","then","than","been","being","through","after","before","while","where","also","only","some","more","very"}
+    words = re.findall(r"[A-Za-z][A-Za-z'-]{3,}", text.lower())
+    keywords = [word for word,_ in Counter(w for w in words if w not in stop).most_common(6)]
+    points = []
+    for sentence in sentences[1:8]:
+        clean = sentence[:220].strip()
+        if clean and clean not in points: points.append(clean)
+        if len(points) == 4: break
+    if not points:
+        points = [f"The story is written by {story.author}.", f"It is presented as {story.category} content.", "Its central events and character choices shape the narrative."]
+    themes = [word.title() for word in keywords[:5]] or list(story.tags[:5]) or [story.category]
+    questions = [
+        {"question":"What is the story mainly about?","answer":summary},
+        {"question":"Who are the important characters or voices?","answer":points[0]},
+        {"question":"What themes should I notice while reading?","answer":"Key ideas include " + ", ".join(themes) + "."},
+        {"question":"What is one important takeaway?","answer":points[-1]},
+    ]
+    return {"summary":summary,"key_points":points,"themes":themes,"questions":questions,"generated_by":"local"}
+
+
+def _generate_story_insights(story, source_text):
+    fallback = _fallback_story_insights(story, source_text)
+    if not settings.OPENAI_API_KEY or len(source_text.strip()) < 120:
+        return fallback
+    prompt = f'''Create spoiler-aware reading insights for the story "{story.title}" by {story.author}.
+Return strict JSON with: summary (3-6 short paragraphs as one string), key_points (4-7 concise strings), themes (3-6 strings), questions (4-6 objects with question and answer). Use only the supplied text; do not invent facts.
+STORY TEXT:\n{source_text[:24000]}'''
+    try:
+        client = OpenAI(api_key=settings.OPENAI_API_KEY)
+        response = client.chat.completions.create(model="gpt-4o-mini",temperature=0.2,response_format={"type":"json_object"},messages=[{"role":"system","content":"You produce accurate, concise book study guides as JSON."},{"role":"user","content":prompt}])
+        data = json.loads(response.choices[0].message.content or "{}")
+        if data.get("summary") and data.get("key_points") and data.get("questions"):
+            data["generated_by"] = "ai"
+            return data
+    except Exception as exc:
+        print("STORY INSIGHTS GENERATION FAILED:", exc)
+    return fallback
+
+
+@api_view(['GET','POST'])
+@permission_classes([AllowAny])
+def story_insights(request, story_id):
+    story = StoryDocument.objects(id=story_id).first() if ObjectId.is_valid(story_id) else None
+    if not story or story.status != "published":
+        return error("Story not found", 404)
+    cached = getattr(story, "insights", None) or {}
+    if request.method == "GET" and cached.get("summary"):
+        return success(cached)
+    source_text = story.description or ""
+    if story.book_url:
+        pdf_text, _ = extract_pdf_full_text(story.book_url, max_pages=30)
+        if pdf_text: source_text = pdf_text
+    if not source_text and story.audio_parts:
+        source_text = " ".join(part.text_preview for part in story.audio_parts if part.text_preview)
+    insights = _generate_story_insights(story, source_text)
+    insights["generated_at"] = datetime.utcnow().isoformat()
+    story.insights = insights
+    story.updated_at = datetime.utcnow()
+    story.save()
+    return success(insights, "Story insights generated")

@@ -14,6 +14,7 @@ from django.urls import resolve
 
 from apps.accounts.serializers import ProfileUpdateSerializer
 from apps.stories.serializers import story_to_dict
+from apps.stories.views import text_extraction_is_corrupt
 from apps.subscriptions.views import verify_payment
 from common.permissions import can_manage_story, is_admin
 
@@ -104,12 +105,26 @@ class PaymentTests(unittest.TestCase):
         self.assertFalse(verify_payment("unverified", self.plan))
 
 
+class HindiExtractionTests(unittest.TestCase):
+    def test_detects_broken_hindi_unicode_mapping(self):
+        broken = "ȴदȉ Ēकाश ƣबे बे×ट सेलर और कंȶडशंस अËलाई ȳलखने के बाद"
+        self.assertTrue(text_extraction_is_corrupt(broken))
+
+    def test_accepts_clean_hindi_unicode(self):
+        clean = "दिव्य प्रकाश दुबे हिंदी में सुंदर कहानियाँ लिखते और सुनाते हैं।"
+        self.assertFalse(text_extraction_is_corrupt(clean))
+
+
 class ValidationAndRoutingTests(unittest.TestCase):
     def test_listening_goal_is_bounded(self):
         serializer = ProfileUpdateSerializer(data={"listening_goal": 0})
         self.assertFalse(serializer.is_valid())
         serializer = ProfileUpdateSerializer(data={"listening_goal": 30})
         self.assertTrue(serializer.is_valid())
+
+    def test_story_insights_route_exists(self):
+        match = resolve("/api/stories/507f1f77bcf86cd799439011/insights/")
+        self.assertEqual(match.func.__name__, "view")
 
     def test_story_review_route_exists(self):
         match = resolve("/api/reviews/stories/507f1f77bcf86cd799439011/")

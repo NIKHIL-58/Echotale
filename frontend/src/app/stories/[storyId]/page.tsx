@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { OfflineDownloadManager } from "@/components/audio/OfflineDownloadManager";
+import { StoryInsights } from "@/components/story/StoryInsights";
 
 import { usePlayerStore } from "@/store/playerStore";
 import { addToHistory } from "@/lib/userLists";
@@ -388,6 +389,8 @@ export default function StoryDetailPage() {
                 </div>
               )}
             </section>
+
+        <StoryInsights storyId={story.id} />
 
         <OfflineDownloadManager story={story} />
 
