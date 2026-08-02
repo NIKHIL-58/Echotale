@@ -62,6 +62,8 @@ function unwrap<T>(response: AxiosResponse<ApiEnvelope<T>>): T {
   return response.data.data;
 }
 
+export async function getRecommendations(): Promise<Story[]> { return unwrap(await apiClient.get("/recommendations/")); }
+
 export async function getLibrary(): Promise<StoryReference[]> {
   return unwrap(await apiClient.get("/library/"));
 }
@@ -187,4 +189,6 @@ export function resolveStories(
     .map((entry) => byId.get(entry.story_id))
     .filter((story): story is Story => Boolean(story));
 }
+
+
 

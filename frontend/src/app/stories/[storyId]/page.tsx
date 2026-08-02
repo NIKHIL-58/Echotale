@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { OfflineDownloadManager } from "@/components/audio/OfflineDownloadManager";
 
 import { usePlayerStore } from "@/store/playerStore";
 import { addToHistory } from "@/lib/userLists";
@@ -96,11 +97,15 @@ export default function StoryDetailPage() {
 
   const queue = audioParts.map((part) => ({
     id: `${story.id}-part-${part.part_number}`,
+    storyId: story.id,
+    chapterId: String(part.part_number),
+    chapterNumber: part.part_number,
     title: `${story.title} - ${part.title || `Part ${part.part_number}`}`,
     author: story.author || "Unknown Author",
     cover: getMediaUrl(story.cover_image),
     duration: (part.duration_estimate || 5) * 60,
     audioUrl: getMediaUrl(part.audio_url),
+    textPreview: part.text_preview,
   }));
 
   setSelectedPart(index);
@@ -476,6 +481,8 @@ export default function StoryDetailPage() {
     </AppLayout>
   );
 }
+
+
 
 
 
