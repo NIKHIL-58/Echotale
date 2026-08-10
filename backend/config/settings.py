@@ -36,6 +36,15 @@ CORS_ALLOWED_ORIGINS = [
     if origin.strip()
 ]
 
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https://[a-z0-9-]+\.vercel\.app$",
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://echot.vercel.app",
+    "https://echotale-xi.vercel.app",
+]
+
 CORS_ALLOW_CREDENTIALS = True
 
 
