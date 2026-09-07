@@ -1,11 +1,12 @@
-﻿import { BookOpen, CheckCircle2, Headphones, ShieldCheck, Sparkles } from "lucide-react";
+import { CheckCircle2, Headphones, ShieldCheck, Sparkles } from "lucide-react";
+import { EchoTaleLogo } from "@/components/brand/EchoTaleLogo";
 
 export function AuthLayout({ title, subtitle, children }: { title: string; subtitle?: string; children: React.ReactNode }) {
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_10%_10%,rgba(121,87,216,.11),transparent_30%),linear-gradient(135deg,#faf8f4,#f1edf6)] p-3 sm:p-5 lg:p-7">
       <div className="mx-auto grid min-h-[calc(100vh-24px)] w-full max-w-[1240px] overflow-hidden rounded-[28px] border border-white/70 bg-white shadow-[0_28px_80px_rgba(23,17,47,.13)] sm:min-h-[calc(100vh-40px)] lg:min-h-[calc(100vh-56px)] lg:grid-cols-[.82fr_1.18fr]">
         <section className="flex flex-col justify-center px-6 py-8 sm:px-10 lg:px-12 lg:py-9">
-          <div className="mb-7 flex items-center gap-3"><div className="grid h-11 w-11 place-items-center rounded-[14px] bg-[#17112f] text-[#e5be70] shadow-lg"><BookOpen size={25} /></div><div><h2 className="text-2xl font-extrabold tracking-[-.03em] text-[#17162B]">EchoTale</h2><p className="text-xs font-semibold text-[#777181]">Listen. Feel. Remember.</p></div></div>
+          <EchoTaleLogo className="mb-7" />
           <div className="mb-6"><h1 className="max-w-md text-[38px] font-extrabold leading-[1.04] tracking-[-.045em] text-[#17162B] sm:text-[44px]">{title}</h1>{subtitle && <p className="mt-2.5 max-w-md text-sm leading-6 text-[#6E6A7C]">{subtitle}</p>}</div>
           {children}
           <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 border-t border-[#eeeaf1] pt-4 text-[11px] font-semibold text-[#827d8d]"><span className="inline-flex items-center gap-1.5"><ShieldCheck size={13} /> Secure access</span><span className="inline-flex items-center gap-1.5"><CheckCircle2 size={13} /> Free to begin</span></div>

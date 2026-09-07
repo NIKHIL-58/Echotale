@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -152,7 +152,7 @@ export function Topbar() {
             setNotificationOpen((prev) => !prev);
             setMenuOpen(false);
           }}
-          className="relative grid h-11 w-11 place-items-center rounded-2xl border border-[#e8e6ef] bg-white text-[#17162B] shadow-sm transition hover:-translate-y-0.5 hover:bg-[#f7f5ff]"
+          className="relative grid h-11 w-11 place-items-center rounded-[16px] border border-white/90 bg-white/80 text-[#17162B] shadow-[0_8px_24px_rgba(31,25,61,.07)] backdrop-blur-xl transition hover:-translate-y-0.5 hover:bg-[#f7f5ff]"
         >
           <Bell size={22} />
 
@@ -209,7 +209,7 @@ export function Topbar() {
             setMenuOpen((prev) => !prev);
             setNotificationOpen(false);
           }}
-          className="flex items-center gap-3 rounded-2xl border border-transparent p-1.5 transition hover:border-[#e8e6ef] hover:bg-white"
+          className="flex items-center gap-3 rounded-[18px] border border-transparent bg-white/35 p-1.5 pr-2.5 transition hover:border-white/90 hover:bg-white/80"
         >
           <div className="grid h-12 w-12 place-items-center overflow-hidden rounded-full bg-[#F1EDFF] text-[#7251F5]">
             {avatarUrl ? (
