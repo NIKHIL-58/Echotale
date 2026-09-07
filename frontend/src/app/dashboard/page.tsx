@@ -12,7 +12,7 @@ export default function DashboardPage() {
         <section className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <div className="mb-2 inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[.16em] text-primary"><Sparkles size={14} /> Your listening space</div>
-            <h1 className="text-3xl font-black tracking-[-.045em] text-textMain sm:text-[38px]">Stories worth your time.</h1>
+            <h1 className="text-3xl font-black tracking-[-.045em] text-textMain sm:text-[34px]">Stories worth your time.</h1>
             <p className="mt-2 text-sm text-textMuted">Discover something new or return to a story you already love.</p>
           </div>
           <div className="flex items-center gap-2">

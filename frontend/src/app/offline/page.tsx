@@ -1,5 +1,6 @@
-﻿import Link from "next/link";
-import { BookOpen, Download, Home, RefreshCw, WifiOff } from "lucide-react";
+import Link from "next/link";
+import { Download, Home, RefreshCw, WifiOff } from "lucide-react";
+import { EchoTaleLogo } from "@/components/brand/EchoTaleLogo";
 
 export default function OfflinePage() {
   return (
@@ -7,7 +8,7 @@ export default function OfflinePage() {
       <img src="/premium-story-world.png" alt="" className="absolute inset-0 h-full w-full object-cover object-right opacity-35" />
       <div className="absolute inset-0 bg-gradient-to-r from-[#080619] via-[#0b0920]/95 to-[#0b0920]/55" />
       <section className="relative z-10 w-full max-w-lg rounded-[30px] border border-white/10 bg-white/[.08] p-7 shadow-2xl backdrop-blur-xl sm:p-10">
-        <div className="flex items-center gap-3"><span className="grid h-11 w-11 place-items-center rounded-2xl bg-[#e6be6d] text-[#241807]"><BookOpen className="h-6 w-6" /></span><span className="text-xl font-black">EchoTale</span></div>
+        <EchoTaleLogo inverse />
         <span className="mt-10 grid h-14 w-14 place-items-center rounded-2xl bg-white/10 text-[#f0cd85]"><WifiOff className="h-7 w-7" /></span>
         <h1 className="mt-6 text-4xl font-black tracking-[-.04em]">You’re offline,<br/>but your stories aren’t gone.</h1>
         <p className="mt-4 leading-7 text-white/65">Previously visited pages and cached stories remain available. Connect again for login, uploads, payments, and new content.</p>

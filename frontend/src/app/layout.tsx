@@ -12,13 +12,13 @@ export const metadata: Metadata = {
     statusBarStyle: "default",
   },
   icons: {
-    icon: "/icon-192x192.png",
-    apple: "/icon-192x192.png",
+    icon: [{ url: "/echotale-mark.svg", type: "image/svg+xml" }],
+    apple: "/echotale-mark.svg",
   },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#6c4df6",
+  themeColor: "#100c25",
 };
 
 export default function RootLayout({
