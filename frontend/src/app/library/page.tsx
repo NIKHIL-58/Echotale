@@ -1,13 +1,2 @@
-﻿"use client";
-import { useEffect,useState } from "react";
-import Link from "next/link";
-import { BookOpen, Library, Loader2, Plus } from "lucide-react";
-import { AppLayout } from "@/components/layout/AppLayout";
-import { getStories,type Story } from "@/services/storyService";
-import { getLibrary,resolveStories } from "@/services/appService";
-import { getToken } from "@/lib/auth";
-import { StoryGridCard } from "@/components/stories/StoryGridCard";
-export default function LibraryPage(){const[stories,setStories]=useState<Story[]>([]);const[loading,setLoading]=useState(true);const[error,setError]=useState("");useEffect(()=>{async function load(){try{if(!getToken())throw new Error("Please sign in to view your library.");const[entries,all]=await Promise.all([getLibrary(),getStories()]);setStories(resolveStories(entries,all));}catch(e){setError(e instanceof Error?e.message:"Unable to load your library.");}finally{setLoading(false);}}load();},[]);return <AppLayout rightPanel={false}><div className="space-y-6">
-<header className="flex flex-col gap-5 rounded-[26px] border border-borderSoft bg-white p-6 shadow-soft sm:flex-row sm:items-center sm:justify-between sm:p-7"><div className="flex items-center gap-4"><span className="grid h-12 w-12 place-items-center rounded-2xl bg-soft text-primary"><Library size={22}/></span><div><p className="text-[11px] font-bold uppercase tracking-[.14em] text-primary">Your collection</p><h1 className="mt-1 text-3xl font-black tracking-[-.04em]">My library</h1><p className="mt-1 text-sm text-textMuted">Stories you added for easy access.</p></div></div><div className="flex items-center gap-3"><span className="rounded-xl bg-page px-3 py-2 text-xs font-bold text-textMuted">{stories.length} saved</span><Link href="/stories/upload" className="inline-flex h-11 items-center gap-2 rounded-xl bg-primary px-4 text-sm font-bold text-white"><Plus size={16}/>Upload</Link></div></header>
-{loading&&<div className="grid min-h-64 place-items-center"><Loader2 className="animate-spin text-primary" size={30}/></div>}{error&&<div className="rounded-2xl border border-red-100 bg-red-50 p-5 text-sm font-semibold text-red-700">{error}</div>}{!loading&&!error&&stories.length===0&&<div className="grid min-h-72 place-items-center rounded-[26px] border border-dashed border-borderSoft bg-white p-8 text-center"><div><BookOpen className="mx-auto text-primary" size={34}/><h2 className="mt-4 text-xl font-extrabold">Your library is ready for a story</h2><p className="mt-2 text-sm text-textMuted">Add a story while exploring or upload your own PDF.</p><Link href="/explore" className="mt-5 inline-flex rounded-xl bg-primary px-5 py-3 text-sm font-bold text-white">Explore stories</Link></div></div>}{!loading&&!error&&stories.length>0&&<div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">{stories.map(s=><StoryGridCard key={s.id} story={s}/>)}</div>}
-</div></AppLayout>}
+import { StoryCollection } from "@/components/stories/StoryCollection";
+export default function Page() { return <StoryCollection kind="library" />; }

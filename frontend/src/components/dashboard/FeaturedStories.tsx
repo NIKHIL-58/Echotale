@@ -1,14 +1,17 @@
-﻿"use client";
-import { useEffect, useState } from "react";
+"use client";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { StoryGridCard } from "@/components/stories/StoryGridCard";
+import { EmptyState, ErrorState, StorySkeletons } from "@/components/ui/ContentState";
 import { type Story } from "@/services/storyService";
 import { getRecommendations } from "@/services/appService";
 export function FeaturedStories() {
-  const [stories, setStories] = useState<Story[]>([]);
-  useEffect(() => { getRecommendations().then((items) => setStories(items.slice(0, 3))).catch(() => setStories([])); }, []);
-  return <section><div className="mb-4 flex items-end justify-between gap-4"><div className="flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-2xl bg-[#fff4d7] text-[#ad7619]"><Sparkles size={19} /></span><div><h2 className="text-xl font-extrabold tracking-tight text-text">Featured stories</h2><p className="text-sm text-textMuted">Handpicked listens worth discovering</p></div></div><Link className="inline-flex items-center gap-1.5 text-sm font-bold text-primary hover:underline" href="/explore">View all <ArrowRight size={16} /></Link></div>{stories.length === 0 ? <div className="rounded-2xl border border-[#ebe7ef] bg-white p-5 shadow-soft"><p className="font-semibold">No featured stories yet</p><p className="mt-1 text-sm text-textMuted">Upload a story to see it here.</p></div> : <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{stories.map((story) => <StoryGridCard key={story.id} story={story} />)}</div>}</section>;
+ const [stories, setStories] = useState<Story[]>([]), [loading,setLoading] = useState(true), [error,setError] = useState("");
+ const load = useCallback(async () => { setLoading(true); setError(""); try { setStories((await getRecommendations()).slice(0,3)); } catch { setError("Recommendations are unavailable right now."); } finally {setLoading(false);} }, []);
+ useEffect(() => {load();},[load]);
+ return <section><div className="mb-4 flex items-end justify-between gap-3"><div><h2 className="section-title">Recommended for you</h2><p className="mt-1 text-sm text-textMuted">A fresh chapter for your reading list.</p></div><Link href="/explore" className="inline-flex min-h-10 shrink-0 items-center gap-1.5 text-sm font-semibold text-primary">View all<ArrowRight size={15}/></Link></div>
+ {loading ? <StorySkeletons/> : error ? <ErrorState message={error} onRetry={load}/> : stories.length ? <div className="story-grid">{stories.map(story => <StoryGridCard key={story.id} story={story}/>)}</div> : <EmptyState compact title="Discover your next favorite" description="Explore the collection and choose your favorite genres to shape your recommendations."/>}</section>;
 }
 
 

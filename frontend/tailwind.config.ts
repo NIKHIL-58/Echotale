@@ -5,18 +5,19 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        primary: '#7657D3',
+        primary: '#7052C8',
         deep: '#0D0A22',
         soft: '#F0ECF7',
         violet: '#9271E2',
-        page: '#F4F1F5',
-        textMain: '#1C1927',
-        textMuted: '#716D79',
-        borderSoft: '#E7E1E9'
+        page: '#F8F7FA',
+        text: '#211C30',
+        textMain: '#211C30',
+        textMuted: '#716A80',
+        borderSoft: '#E9E5EE'
       },
       boxShadow: {
-        soft: '0 10px 30px rgba(35,27,74,.08)',
-        card: '0 20px 50px rgba(35,27,74,.12)'
+        soft: '0 4px 18px rgba(35,27,74,.035)',
+        card: '0 12px 32px rgba(35,27,74,.08)'
       },
       borderRadius: {
         input: '14px',

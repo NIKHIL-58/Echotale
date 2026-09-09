@@ -1,14 +1,17 @@
-﻿"use client";
-import { useEffect, useState } from "react";
+"use client";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Clock3 } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { StoryGridCard } from "@/components/stories/StoryGridCard";
+import { EmptyState, ErrorState } from "@/components/ui/ContentState";
 import { getHistory } from "@/lib/userLists";
 import { getToken } from "@/lib/auth";
 import { getServerHistory, resolveStories } from "@/services/appService";
 import { getStories, type Story } from "@/services/storyService";
 export function ContinueListening() {
-  const [stories, setStories] = useState<Story[]>([]);
-  useEffect(() => { if (!getToken()) { setStories(getHistory().slice(0, 3)); return; } Promise.all([getServerHistory(), getStories()]).then(([entries, allStories]) => setStories(resolveStories(entries, allStories).slice(0, 3))).catch(() => setStories([])); }, []);
-  return <section><div className="mb-4 flex items-end justify-between gap-4"><div className="flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-2xl bg-[#eee8ff] text-primary"><Clock3 size={19} /></span><div><h2 className="text-xl font-extrabold tracking-tight text-text">Continue listening</h2><p className="text-sm text-textMuted">Pick up exactly where you left off</p></div></div><Link className="inline-flex items-center gap-1.5 text-sm font-bold text-primary hover:underline" href="/history">View history <ArrowRight size={16} /></Link></div>{stories.length === 0 ? <div className="rounded-2xl border border-[#ebe7ef] bg-white p-5 shadow-soft"><p className="font-semibold">No listening progress yet</p><p className="mt-1 text-sm text-textMuted">Start playing a story and it will appear here.</p></div> : <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{stories.map((story) => <StoryGridCard key={story.id} story={story} />)}</div>}</section>;
+ const [stories,setStories] = useState<Story[]>([]), [loading,setLoading] = useState(true), [error,setError] = useState("");
+ const load = useCallback(async () => { setLoading(true); setError(""); try { if (!getToken()) setStories(getHistory().slice(0,3)); else { const [entries,all] = await Promise.all([getServerHistory(),getStories()]); setStories(resolveStories(entries,all).slice(0,3)); } } catch { setError("Your recent stories could not be loaded."); } finally {setLoading(false);} }, []);
+ useEffect(() => {load();},[load]);
+ return <section><div className="mb-4 flex items-end justify-between gap-3"><div><h2 className="section-title">Back to your stories</h2><p className="mt-1 text-sm text-textMuted">Your recently opened reads and listens.</p></div><Link href="/history" className="inline-flex min-h-10 shrink-0 items-center gap-1.5 text-sm font-semibold text-primary">History<ArrowRight size={15}/></Link></div>
+ {loading ? <div className="story-grid" role="status" aria-label="Loading recent stories">{[0,1,2].map(i => <div key={i} className="h-28 animate-pulse rounded-2xl bg-soft"/>)}</div> : error ? <ErrorState message={error} onRetry={load}/> : stories.length ? <div className="story-grid">{stories.map(story => <StoryGridCard key={story.id} story={story} compact/>)}</div> : <EmptyState compact title="Start a story, find it here" description="Recently opened stories stay within reach, ready for your next listening break."/>}</section>;
 }

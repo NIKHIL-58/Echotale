@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -267,13 +267,13 @@ export default function ProfilePage() {
           </div>
         )}
 
-        <section className="relative isolate overflow-hidden rounded-[30px] bg-[#0d0a22] p-6 text-white shadow-[0_24px_60px_rgba(24,17,51,.22)] sm:p-8">
-          <img src="/premium-story-world.png" alt="" className="absolute inset-0 -z-20 h-full w-full object-cover object-right opacity-25" />
+        <section className="relative isolate overflow-hidden rounded-[24px] bg-[#0d0a22] p-6 text-white shadow-[0_24px_60px_rgba(24,17,51,.22)] sm:p-8">
+          <img src="/images/listening-world.png" alt="" className="absolute inset-0 -z-20 h-full w-full object-cover object-right opacity-25" />
           <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#0d0a22] via-[#0d0a22]/95 to-[#0d0a22]/65" />
           <div className="relative flex flex-col gap-7 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
               <div className="relative shrink-0">
-                <div className="grid h-24 w-24 place-items-center overflow-hidden rounded-[26px] border-2 border-white/15 bg-white/10 text-[#e6be6d] shadow-2xl sm:h-28 sm:w-28">
+                <div className="grid h-24 w-24 place-items-center overflow-hidden rounded-[26px] border-2 border-white/15 bg-white/10 text-[#e6be6d] shadow-2xl sm:h-24 sm:w-24">
                   {user.avatar ? <img src={user.avatar} alt={user.name} className="h-full w-full object-cover" /> : <User size={42} />}
                 </div>
                 <button onClick={() => setEditOpen(true)} aria-label="Change profile picture" title="Change profile picture" className="absolute -bottom-2 -right-2 grid h-9 w-9 place-items-center rounded-xl border-2 border-[#0d0a22] bg-[#e4ba65] text-[#241807] shadow-lg transition hover:scale-105"><Camera size={16} /></button>
@@ -284,7 +284,7 @@ export default function ProfilePage() {
                   {user.is_premium ? <><Crown size={14} /> Premium member</> : <><Sparkles size={14} /> EchoTale listener</>}
                 </div>
                 <h1 className="truncate text-3xl font-black tracking-[-.04em] sm:text-4xl">{user.name}</h1>
-                <p className="mt-2 flex items-center gap-2 text-sm text-white/55"><Mail size={15} />{user.email}</p>
+                <p className="mt-2 flex items-center gap-2 break-all text-sm text-white/75"><Mail size={15} />{user.email}</p>
                 <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-xs font-semibold text-white/55">
                   <span className="flex items-center gap-2"><Globe2 size={14} className="text-[#e4ba65]" />{user.language || "English"}</span>
                   <span className="flex items-center gap-2"><Target size={14} className="text-[#e4ba65]" />{user.listening_goal || 30} min daily</span>
@@ -365,7 +365,7 @@ export default function ProfilePage() {
 
               <section className="mt-7">
                 <h3 className="font-extrabold text-textMain">Favorite genres</h3><p className="mt-1 text-xs text-textMuted">Select all that match your taste.</p>
-                <div className="mt-4 flex flex-wrap gap-2">{genreOptions.map((genre)=>{const active=form.favorite_genres.includes(genre);return <button key={genre} type="button" onClick={()=>toggleGenre(genre)} className={`inline-flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-sm font-bold transition ${active?"border-primary bg-soft text-primary":"border-borderSoft bg-white text-textMuted hover:border-primary/25 hover:text-textMain"}`}>{active&&<CheckCircle2 size={14} />}{genre}</button>})}</div>
+                <div className="mt-4 flex flex-wrap gap-2">{genreOptions.map((genre)=>{const active=form.favorite_genres.includes(genre);return <button key={genre} type="button" aria-pressed={active} onClick={()=>toggleGenre(genre)} className={`inline-flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-sm font-bold transition ${active?"border-primary bg-soft text-primary":"border-borderSoft bg-white text-textMuted hover:border-primary/25 hover:text-textMain"}`}>{active&&<CheckCircle2 size={14} />}{genre}</button>})}</div>
               </section>
             </div>
 

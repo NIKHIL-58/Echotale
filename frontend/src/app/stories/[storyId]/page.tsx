@@ -213,19 +213,19 @@ export default function StoryDetailPage() {
           </div>
         )}
 
-        <section className="grid gap-8 rounded-[32px] bg-white p-6 shadow-soft md:grid-cols-[300px_1fr]">
+        <section className="grid gap-6 rounded-2xl border border-borderSoft bg-white p-5 shadow-soft sm:p-7 md:grid-cols-[220px_minmax(0,1fr)]">
           <div className="overflow-hidden rounded-[28px] bg-soft">
             {coverUrl ? (
               <img
                   src={coverUrl}
                   alt={story.title}
-                  className="h-[420px] w-full object-cover"
+                  className="h-[300px] w-full object-contain p-3"
                   onError={(event) => {
                     event.currentTarget.style.display = "none";
                   }}
                 />
             ) : (
-              <div className="grid h-[420px] place-items-center bg-gradient-to-br from-[#2B1B7A] to-[#A855F7] text-white">
+              <div className="grid h-[300px] place-items-center bg-gradient-to-br from-[#2B1B7A] to-[#A855F7] text-white">
                 <BookOpen size={64} />
               </div>
             )}
@@ -238,7 +238,7 @@ export default function StoryDetailPage() {
               {story.title}
             </h1>
 
-            <p className="mt-3 text-lg text-textMuted">
+            <p className="mt-3 text-base text-textMuted">
               by {story.author || "Unknown Author"}
             </p>
 
@@ -264,7 +264,7 @@ export default function StoryDetailPage() {
                 onClick={handleAddToLibrary}
                 title="Add to library"
                 aria-label="Add to library"
-                className="grid h-11 w-11 place-items-center rounded-full border border-borderSoft bg-white text-textMain shadow-sm transition hover:-translate-y-0.5 hover:border-primary/30 hover:text-primary hover:shadow-soft"
+                className="grid h-11 w-11 place-items-center rounded-xl border border-borderSoft bg-white text-textMain shadow-sm transition hover:-translate-y-0.5 hover:border-primary/30 hover:text-primary hover:shadow-soft"
               >
                 <Library size={19} />
               </button>
@@ -275,7 +275,7 @@ export default function StoryDetailPage() {
                   rel="noreferrer"
                   title="Open PDF"
                   aria-label="Open PDF"
-                  className="grid h-11 w-11 place-items-center rounded-full border border-borderSoft bg-white text-textMain shadow-sm transition hover:-translate-y-0.5 hover:border-primary/30 hover:text-primary hover:shadow-soft"
+                  className="grid h-11 w-11 place-items-center rounded-xl border border-borderSoft bg-white text-textMain shadow-sm transition hover:-translate-y-0.5 hover:border-primary/30 hover:text-primary hover:shadow-soft"
                 >
                   <FileDown size={19} />
                 </a>
@@ -300,7 +300,7 @@ export default function StoryDetailPage() {
             )}
           </div>
         </section>
-            <section className="rounded-[28px] bg-page p-5 shadow-soft sm:p-7">
+            <section className="rounded-2xl border border-borderSoft bg-white p-5 sm:p-6">
               <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <h3 className="font-bold text-textMain">Audiobook Parts</h3>
@@ -394,12 +394,12 @@ export default function StoryDetailPage() {
 
         <OfflineDownloadManager story={story} />
 
-        <section className="overflow-hidden rounded-[30px] border border-borderSoft bg-white shadow-soft">
+        <section className="overflow-hidden rounded-2xl border border-borderSoft bg-white shadow-soft">
           <div className="flex flex-col gap-4 border-b border-borderSoft px-6 py-6 sm:flex-row sm:items-center sm:justify-between sm:px-8">
             <div className="flex items-center gap-3">
               <span className="grid h-11 w-11 place-items-center rounded-2xl bg-soft text-primary"><MessageSquareText size={21} /></span>
               <div>
-                <h2 className="text-2xl font-extrabold tracking-[-.03em]">Reader reviews</h2>
+                <h2 className="text-xl font-bold tracking-[-.02em]">Reader reviews</h2>
                 <p className="mt-0.5 text-sm text-textMuted">Share what this story made you feel.</p>
               </div>
             </div>

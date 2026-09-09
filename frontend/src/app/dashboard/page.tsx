@@ -1,30 +1,19 @@
+import Link from "next/link";
+import Image from "next/image";
+import { Plus, ArrowUpRight } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { HeroBanner } from "@/components/dashboard/HeroBanner";
 import { FeaturedStories } from "@/components/dashboard/FeaturedStories";
 import { ContinueListening } from "@/components/dashboard/ContinueListening";
 import { Categories } from "@/components/dashboard/Categories";
-import { Headphones, Library, Sparkles } from "lucide-react";
-
 export default function DashboardPage() {
-  return (
-    <AppLayout rightPanel={false}>
-      <div className="space-y-9 pb-8">
-        <section className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <div className="mb-2 inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[.16em] text-primary"><Sparkles size={14} /> Your listening space</div>
-            <h1 className="text-3xl font-black tracking-[-.045em] text-textMain sm:text-[34px]">Stories worth your time.</h1>
-            <p className="mt-2 text-sm text-textMuted">Discover something new or return to a story you already love.</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/80 bg-white/70 px-3 py-2 text-xs font-bold text-textMuted shadow-sm backdrop-blur"><Headphones size={15} className="text-primary" /> Immersive audio</span>
-            <span className="hidden items-center gap-2 rounded-full border border-white/80 bg-white/70 px-3 py-2 text-xs font-bold text-textMuted shadow-sm backdrop-blur sm:inline-flex"><Library size={15} className="text-primary" /> Personal library</span>
-          </div>
-        </section>
-        <HeroBanner />
-        <Categories />
-        <ContinueListening />
-        <FeaturedStories />
-      </div>
-    </AppLayout>
-  );
+ return <AppLayout><div className="space-y-8">
+  <PageHeader eyebrow="Your daily escape" title="A good day for a great story." description="Discover something new, or return to a world you love." actions={<Link href="/stories/upload" className="action-secondary"><Plus size={17}/>Upload story</Link>}/>
+  <HeroBanner />
+  <ContinueListening />
+  <Categories />
+  <FeaturedStories />
+  <section className="grid overflow-hidden rounded-2xl border border-[#ece2d5] bg-[#faf3e8] sm:grid-cols-[1fr_240px]"><div className="p-6 sm:p-8"><p className="eyebrow !text-[#836446]">Make it yours</p><h2 className="section-title mt-2">Your own corner of the story world.</h2><p className="mt-2 text-sm text-textMuted">Keep your favorites close and build a library that feels like you.</p><Link href="/library" className="mt-4 inline-flex min-h-10 items-center gap-2 text-sm font-semibold text-primary">Visit my library<ArrowUpRight size={17}/></Link></div><div className="relative hidden sm:block"><Image src="/images/reading-corner.png" alt="Headphones and books beside a comfortable reading chair." fill sizes="240px" className="object-cover"/></div></section>
+ </div></AppLayout>;
 }

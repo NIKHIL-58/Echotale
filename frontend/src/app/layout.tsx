@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [{ url: "/echotale-mark.svg", type: "image/svg+xml" }],
-    apple: "/echotale-mark.svg",
+    apple: "/echotale-icon-180.png",
   },
 };
 

@@ -1,3 +1,2 @@
-export default function Page() {
-  return <main><h1>EchoTale stories</h1></main>;
-}
+import { StoryCollection } from "@/components/stories/StoryCollection";
+export default function Page() { return <StoryCollection kind="stories" />; }

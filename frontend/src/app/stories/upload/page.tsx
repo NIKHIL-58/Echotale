@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { createStory } from "@/services/storyService";
 import {
   CheckCircle2,
@@ -82,19 +83,11 @@ export default function UploadStoryPage() {
   return (
     <AppLayout rightPanel={false}>
       <div className="mx-auto max-w-4xl">
-        <div className="mb-6">
-          <h1 className="text-4xl font-extrabold text-textMain">
-            Upload PDF Story
-          </h1>
-          <p className="mt-2 text-textMuted">
-            Upload a PDF and choose the audiobook voice. EchoTale will detect
-            the title, author, description, and cover preview when possible.
-          </p>
-        </div>
+        <div className="mb-6"><PageHeader title="Give your story a voice" eyebrow="Add to the collection" description="Choose a PDF, select a narrator, and make it your next listen." back={{href:"/library",label:"My library"}} /></div>
 
         <form
           onSubmit={handleSubmit}
-          className="space-y-6 rounded-[32px] bg-white p-8 shadow-soft"
+          className="space-y-6 rounded-2xl border border-borderSoft bg-white p-5 shadow-soft sm:p-8"
         >
           {error && (
             <div className="rounded-2xl bg-red-50 px-5 py-4 font-semibold text-red-600">
@@ -102,12 +95,12 @@ export default function UploadStoryPage() {
             </div>
           )}
 
-          <label className="block cursor-pointer rounded-[30px] border-2 border-dashed border-primary/30 bg-soft/40 p-8 text-center transition hover:border-primary hover:bg-soft">
+          <label className="block cursor-pointer rounded-2xl border-2 border-dashed border-primary/30 bg-soft/40 p-6 text-center transition hover:border-primary hover:bg-soft focus-within:ring-4 focus-within:ring-primary/20">
             <div className="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-3xl bg-primary text-white">
               <FileText size={32} />
             </div>
 
-            <h2 className="text-2xl font-extrabold text-textMain">
+            <h2 className="text-xl font-bold text-textMain">
               Choose PDF file
             </h2>
 
@@ -118,7 +111,7 @@ export default function UploadStoryPage() {
             <input
               type="file"
               accept="application/pdf"
-              className="hidden"
+              className="sr-only"
               onChange={(e) => setBookFile(e.target.files?.[0] || null)}
             />
 
@@ -133,12 +126,13 @@ export default function UploadStoryPage() {
           <div className="rounded-[24px] bg-page p-5">
             <div className="mb-3 flex items-center gap-2">
               <Volume2 className="text-primary" size={20} />
-              <label className="block font-bold text-textMain">
+              <label htmlFor="narrator" className="block text-sm font-semibold text-textMain">
                 Choose Audio Voice
               </label>
             </div>
 
             <select
+              id="narrator"
               value={voice}
               onChange={(event) => setVoice(event.target.value)}
               className="h-12 w-full rounded-2xl border border-borderSoft bg-white px-4 font-semibold text-textMain outline-none focus:border-primary"
@@ -176,7 +170,7 @@ export default function UploadStoryPage() {
           <button
             type="button"
             onClick={() => setShowAdvanced((prev) => !prev)}
-            className="rounded-2xl bg-page px-5 py-3 font-bold text-primary hover:bg-soft"
+            className="action-secondary text-sm"
           >
             {showAdvanced
               ? "Hide optional fields"
@@ -304,7 +298,7 @@ export default function UploadStoryPage() {
                   <input
                     type="file"
                     accept="image/*"
-                    className="hidden"
+                    className="sr-only"
                     onChange={(e) => setCoverFile(e.target.files?.[0] || null)}
                   />
 
@@ -327,7 +321,7 @@ export default function UploadStoryPage() {
                   <input
                     type="file"
                     accept="audio/*"
-                    className="hidden"
+                    className="sr-only"
                     onChange={(e) => setAudioFile(e.target.files?.[0] || null)}
                   />
 

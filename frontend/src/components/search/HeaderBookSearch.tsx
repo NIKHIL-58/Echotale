@@ -1,22 +1,49 @@
 "use client";
 import Link from "next/link";
-import { useEffect,useMemo,useRef,useState } from "react";
-import { BookOpen,Database,ExternalLink,FileText,Library,Loader2,Search,X } from "lucide-react";
-import { getStories,type Story } from "@/services/storyService";
-import { searchOpenLibrary,type LibraryBook } from "@/services/libraryService";
-export function HeaderBookSearch(){
- const root=useRef<HTMLDivElement>(null);const [query,setQuery]=useState("");const [stories,setStories]=useState<Story[]>([]);const [books,setBooks]=useState<LibraryBook[]>([]);const [open,setOpen]=useState(false);const [loading,setLoading]=useState(false);const [warning,setWarning]=useState("");
- useEffect(()=>{getStories().then(setStories).catch(()=>setStories([]));const outside=(e:MouseEvent)=>{if(root.current&&!root.current.contains(e.target as Node))setOpen(false)};document.addEventListener("mousedown",outside);return()=>document.removeEventListener("mousedown",outside)},[]);
- const local=useMemo(()=>{const q=query.trim().toLowerCase();return q.length<2?[]:stories.filter(s=>[s.title,s.author,s.category,s.description].some(v=>v?.toLowerCase().includes(q))).slice(0,4)},[query,stories]);
- useEffect(()=>{const clean=query.trim();if(clean.length<2){setBooks([]);setLoading(false);return}setOpen(true);setLoading(true);setWarning("");const controller=new AbortController();const timer=setTimeout(()=>searchOpenLibrary(clean,controller.signal).then(data=>{setBooks(data.books.slice(0,6));setWarning(data.warning||"")}).catch(error=>{if(error.name!=="AbortError")setWarning("Free library results are temporarily unavailable.")}).finally(()=>setLoading(false)),450);return()=>{clearTimeout(timer);controller.abort()}},[query]);
- function submit(e:React.FormEvent){e.preventDefault();if(query.trim().length>=2)setOpen(true)}
- const hasResults=local.length>0||books.length>0;
- return <div ref={root} className="relative w-full max-w-[760px]"><form onSubmit={submit} className="flex h-12 items-center gap-3 rounded-[18px] border border-white/90 bg-white/80 px-4 shadow-[0_10px_35px_rgba(31,25,61,.07)] backdrop-blur-xl transition focus-within:border-primary/40 focus-within:ring-4 focus-within:ring-primary/10 sm:h-14 sm:px-5"><Search className="shrink-0 text-[#6E6A7C]" size={23}/><input value={query} onFocus={()=>query.trim().length>=2&&setOpen(true)} onChange={e=>setQuery(e.target.value)} onKeyDown={e=>{if(e.key==="Escape")setOpen(false)}} placeholder="Search any book, author, or topic..." className="w-full bg-transparent text-base outline-none placeholder:text-[#98A2B3]"/>{loading&&<Loader2 size={18} className="shrink-0 animate-spin text-primary"/>}{query&&<button type="button" onClick={()=>{setQuery("");setOpen(false)}} aria-label="Clear search" className="grid h-7 w-7 shrink-0 place-items-center rounded-lg text-textMuted hover:bg-soft"><X size={16}/></button>}</form>
- {open&&<div className="absolute left-0 top-[calc(100%+10px)] z-[80] w-[min(860px,calc(100vw-32px))] overflow-hidden rounded-[22px] border border-[#e8e3ee] bg-white shadow-[0_25px_70px_rgba(23,17,47,.2)]"><div className="flex items-center justify-between border-b border-borderSoft bg-[#faf8fc] px-5 py-3"><div><p className="text-sm font-extrabold text-textMain">Book search</p><p className="text-[11px] text-textMuted">EchoTale library + Open Library</p></div><span className="rounded-full bg-soft px-2.5 py-1 text-[10px] font-bold text-primary">Results update as you type</span></div><div className="max-h-[520px] overflow-y-auto p-4">
- {query.trim().length<2?<Empty text="Type at least 2 characters to search."/>:!loading&&!hasResults?<Empty text={`No books found for “${query}”.`}/>:<div className="space-y-5">{local.length>0&&<section><Label icon={<Database size={14}/>} title="In EchoTale"/><div className="mt-2 grid gap-2 sm:grid-cols-2">{local.map(s=><Link key={s.id} href={`/stories/${s.id}`} onClick={()=>setOpen(false)} className="flex items-center gap-3 rounded-xl border border-borderSoft p-2.5 hover:border-primary/25 hover:bg-soft/50"><div className="grid h-12 w-10 shrink-0 place-items-center overflow-hidden rounded-lg bg-soft">{s.cover_image?<img src={s.cover_image.startsWith("http")?s.cover_image:`http://127.0.0.1:8000${s.cover_image}`} alt="" className="h-full w-full object-cover"/>:<BookOpen size={17} className="text-primary"/>}</div><div className="min-w-0"><p className="truncate text-xs font-extrabold">{s.title}</p><p className="truncate text-[11px] text-textMuted">{s.author}</p></div></Link>)}</div></section>}
- <section><Label icon={<Library size={14}/>} title="From Open Library"/>{warning&&<p className="mt-2 text-xs text-amber-700">{warning}</p>}{loading&&books.length===0?<div className="grid h-24 place-items-center"><Loader2 className="animate-spin text-primary" size={23}/></div>:<div className="mt-2 grid gap-2 sm:grid-cols-2">{books.map(b=><ExternalResult key={b.id} book={b}/>)}</div>}</section></div>}
- </div><div className="border-t border-borderSoft bg-[#faf8fc] px-5 py-3 text-[10px] text-textMuted">Free Read and PDF buttons appear only for publicly accessible scans. External links open in a new tab.</div></div>}</div>
+import { useEffect, useMemo, useRef, useState } from "react";
+import { BookOpen, ExternalLink, Loader2, Search, X } from "lucide-react";
+import { getStories, getMediaUrl, type Story } from "@/services/storyService";
+import { searchOpenLibrary, type LibraryBook } from "@/services/libraryService";
+export function HeaderBookSearch() {
+ const root=useRef<HTMLDivElement>(null);
+ const [query,setQuery]=useState(""), [stories,setStories]=useState<Story[]>([]), [books,setBooks]=useState<LibraryBook[]>([]);
+ const [open,setOpen]=useState(false), [loading,setLoading]=useState(false), [warning,setWarning]=useState("");
+ useEffect(() => {
+  getStories().then(setStories).catch(() => setStories([]));
+  const outside=(e:PointerEvent) => {if(root.current&&!root.current.contains(e.target as Node))setOpen(false);};
+  document.addEventListener("pointerdown",outside); return () => document.removeEventListener("pointerdown",outside);
+ }, []);
+ const local=useMemo(() => {const q=query.trim().toLowerCase();return q.length<2?[]:stories.filter(s=>[s.title,s.author,s.category].some(v=>v?.toLowerCase().includes(q))).slice(0,4);},[query,stories]);
+ useEffect(() => {
+  const clean=query.trim(); setBooks([]); setWarning("");
+  if(clean.length<2){setLoading(false);return;}
+  setOpen(true);setLoading(true);
+  const controller=new AbortController();
+  const timer=setTimeout(async () => {
+   try {const result=await searchOpenLibrary(clean,controller.signal);if(!controller.signal.aborted){setBooks(result.books.slice(0,6));setWarning(result.warning||"");}}
+   catch {if(!controller.signal.aborted)setWarning("Open Library is temporarily unavailable. You can still browse EchoTale results.");}
+   finally {if(!controller.signal.aborted)setLoading(false);}
+  },450);
+  return () => {clearTimeout(timer);controller.abort();};
+ }, [query]);
+ return <div ref={root} className="relative min-w-0 w-full">
+  <form role="search" onSubmit={e=>{e.preventDefault();setOpen(query.trim().length>=2);}} className="flex h-12 items-center gap-3 rounded-xl border border-borderSoft bg-white px-4 transition focus-within:border-primary/50 focus-within:ring-4 focus-within:ring-primary/5">
+   <Search size={20} className="shrink-0 text-textMuted"/>
+   <input aria-label="Search books, authors or topics" aria-controls={open?"header-book-results":undefined} value={query} onFocus={()=>query.trim().length>=2&&setOpen(true)} onChange={e=>setQuery(e.target.value)} onKeyDown={e=>{if(e.key==="Escape")setOpen(false);}} placeholder="Search books, authors, or topics…" className="min-w-0 w-full bg-transparent text-base outline-none placeholder:text-[#93899f] focus-visible:outline-none"/>
+   {loading&&<Loader2 size={16} className="shrink-0 animate-spin text-primary"/>}
+   {query&&<button type="button" aria-label="Clear search" onClick={()=>{setQuery("");setOpen(false);}} className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-textMuted hover:bg-soft"><X size={16}/></button>}
+  </form>
+  {open&&<div id="header-book-results" role="region" aria-label="Book search results" className="absolute left-0 top-[calc(100%+8px)] z-[80] w-full min-w-0 overflow-hidden rounded-2xl border border-borderSoft bg-white shadow-[0_18px_55px_rgba(32,24,54,.18)]">
+   <div className="flex items-center justify-between border-b border-borderSoft px-4 py-3"><div><h2 className="text-sm font-semibold">Discover books</h2><p className="text-xs text-textMuted">EchoTale + Open Library</p></div><button type="button" aria-label="Close search results" onClick={()=>setOpen(false)} className="grid h-9 w-9 place-items-center rounded-lg hover:bg-soft"><X size={17}/></button></div>
+   <div className="max-h-[min(65vh,540px)] space-y-5 overflow-y-auto p-4">
+    {local.length>0&&<section><h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-textMuted">In EchoTale</h3><div className="space-y-2">{local.map(s=><Link href={`/stories/${s.id}`} key={s.id} onClick={()=>setOpen(false)} className="flex items-center gap-3 rounded-xl border border-borderSoft p-3 hover:bg-soft"><Cover src={getMediaUrl(s.cover_image)}/><span className="min-w-0"><span className="line-clamp-2 text-sm font-semibold">{s.title}</span><span className="block truncate text-xs text-textMuted">{s.author}</span></span></Link>)}</div></section>}
+    <section><h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-textMuted">Open Library</h3>
+     {warning&&<p role="status" className="mb-3 rounded-lg bg-amber-50 p-3 text-sm text-amber-800">{warning}</p>}
+     {loading ? <p role="status" className="flex items-center justify-center gap-2 py-8 text-sm text-textMuted"><Loader2 size={17} className="animate-spin"/>Searching books…</p> : books.length ? <div className="grid gap-3 xl:grid-cols-2">{books.map(b=><article key={b.id} className="flex gap-3 rounded-xl border border-borderSoft p-3"><Cover src={b.coverUrl}/><div className="min-w-0"><h4 className="line-clamp-2 text-sm font-semibold">{b.title}</h4><p className="mt-1 line-clamp-1 text-xs text-textMuted">{b.author}{b.year ? ` · ${b.year}` : ""}</p><div className="mt-2 flex flex-wrap gap-2"><a href={b.detailsUrl} target="_blank" rel="noreferrer" className="inline-flex min-h-9 items-center gap-1 rounded-lg bg-soft px-2.5 text-xs font-semibold text-primary">Details<ExternalLink size={12}/></a>{b.freeToRead&&<a href={b.readUrl} target="_blank" rel="noreferrer" className="inline-flex min-h-9 items-center rounded-lg bg-primary px-2.5 text-xs font-semibold text-white">Read</a>}{b.pdfUrl&&<a href={b.pdfUrl} target="_blank" rel="noreferrer" className="inline-flex min-h-9 items-center rounded-lg border border-borderSoft px-2.5 text-xs font-semibold">PDF</a>}</div></div></article>)}</div> : !warning && <p className="py-5 text-sm text-textMuted">No books found. Try another title or author.</p>}
+    </section>
+   </div>
+   <p className="border-t border-borderSoft bg-page px-4 py-3 text-xs leading-5 text-textMuted">Reading options depend on availability. External links open in a new tab.</p>
+  </div>}
+ </div>;
 }
-function Label({icon,title}:{icon:React.ReactNode;title:string}){return <h3 className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-[.1em] text-textMuted">{icon}{title}</h3>}
-function Empty({text}:{text:string}){return <div className="grid min-h-28 place-items-center text-sm text-textMuted">{text}</div>}
-function ExternalResult({book}:{book:LibraryBook}){return <article className="flex gap-3 rounded-xl border border-borderSoft p-2.5 transition hover:border-primary/25"><div className="grid h-[76px] w-[54px] shrink-0 place-items-center overflow-hidden rounded-lg bg-soft">{book.coverUrl?<img src={book.coverUrl} alt="" className="h-full w-full object-cover"/>:<BookOpen size={19} className="text-primary"/>}</div><div className="min-w-0 flex-1"><p className="line-clamp-1 text-xs font-extrabold">{book.title}</p><p className="mt-0.5 truncate text-[10px] text-textMuted">{book.author}{book.year?` · ${book.year}`:""}</p><div className="mt-2 flex flex-wrap gap-1.5"><a href={book.detailsUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded-md bg-[#17112f] px-2 py-1 text-[9px] font-bold text-white">Details<ExternalLink size={9}/></a>{book.freeToRead&&<a href={book.readUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded-md bg-primary px-2 py-1 text-[9px] font-bold text-white">Read<BookOpen size={9}/></a>}{book.pdfUrl&&<a href={book.pdfUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded-md bg-soft px-2 py-1 text-[9px] font-bold text-primary">PDF<FileText size={9}/></a>}</div></div></article>}
+function Cover({src}:{src?:string}) { const [failed,setFailed]=useState(false);useEffect(()=>setFailed(false),[src]);return <span className="grid h-16 w-11 shrink-0 place-items-center overflow-hidden rounded-md bg-soft">{src&&!failed?<img src={src} alt="" loading="lazy" className="h-full w-full object-cover" onError={()=>setFailed(true)}/>:<BookOpen size={20} className="text-primary"/>}</span>; }

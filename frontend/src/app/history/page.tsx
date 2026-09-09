@@ -1,14 +1,2 @@
-﻿"use client";
-import { useEffect,useState } from "react";
-import Link from "next/link";
-import { Clock3, Compass, Loader2, Trash2 } from "lucide-react";
-import { AppLayout } from "@/components/layout/AppLayout";
-import { getStories,type Story } from "@/services/storyService";
-import { clearHistory,getHistory } from "@/lib/userLists";
-import { StoryGridCard } from "@/components/stories/StoryGridCard";
-import { clearServerHistory,getServerHistory,resolveStories } from "@/services/appService";
-import { getToken } from "@/lib/auth";
-export default function HistoryPage(){const[stories,setStories]=useState<Story[]>([]);const[loading,setLoading]=useState(true);useEffect(()=>{async function load(){if(!getToken()){setStories(getHistory());return;}const[e,a]=await Promise.all([getServerHistory(),getStories()]);setStories(resolveStories(e,a));}load().catch(()=>setStories([])).finally(()=>setLoading(false));},[]);async function handleClear(){if(!window.confirm("Clear your entire listening history?"))return;if(getToken())await clearServerHistory();else clearHistory();setStories([]);}return <AppLayout rightPanel={false}><div className="space-y-6">
-<header className="flex flex-col gap-5 rounded-[26px] border border-borderSoft bg-white p-6 shadow-soft sm:flex-row sm:items-center sm:justify-between sm:p-7"><div className="flex items-center gap-4"><span className="grid h-12 w-12 place-items-center rounded-2xl bg-[#e9f1ff] text-[#356fd0]"><Clock3 size={22}/></span><div><p className="text-[11px] font-bold uppercase tracking-[.14em] text-[#356fd0]">Recently played</p><h1 className="mt-1 text-3xl font-black tracking-[-.04em]">Listening history</h1><p className="mt-1 text-sm text-textMuted">Continue stories you recently opened.</p></div></div>{stories.length>0&&<button type="button" onClick={handleClear} className="inline-flex h-10 w-fit items-center gap-2 rounded-xl border border-red-100 bg-red-50 px-4 text-xs font-bold text-red-600 transition hover:bg-red-100"><Trash2 size={15}/>Clear history</button>}</header>
-{loading?<div className="grid min-h-64 place-items-center"><Loader2 className="animate-spin text-primary" size={30}/></div>:stories.length===0?<div className="grid min-h-72 place-items-center rounded-[26px] border border-dashed border-borderSoft bg-white p-8 text-center"><div><Clock3 className="mx-auto text-primary" size={34}/><h2 className="mt-4 text-xl font-extrabold">No listening history</h2><p className="mt-2 text-sm text-textMuted">Stories you open will appear here automatically.</p><Link href="/explore" className="mt-5 inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-bold text-white"><Compass size={16}/>Find a story</Link></div></div>:<div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">{stories.map(s=><StoryGridCard key={s.id} story={s}/>)}</div>}
-</div></AppLayout>}
+import { StoryCollection } from "@/components/stories/StoryCollection";
+export default function Page() { return <StoryCollection kind="history" />; }

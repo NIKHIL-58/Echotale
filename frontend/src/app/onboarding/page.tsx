@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { categories } from "@/lib/constants";
+import { EchoTaleLogo } from "@/components/brand/EchoTaleLogo";
 import { Button } from "@/components/ui/Button";
 import { updateProfile } from "@/services/appService";
 
@@ -39,14 +40,15 @@ export default function OnboardingPage() {
 
   return (
     <main className="grid min-h-screen place-items-center p-6">
-      <section className="w-full max-w-3xl rounded-widget bg-white p-8 shadow-card">
-        <h1 className="text-3xl font-bold">Personalize your EchoTale</h1>
+      <section className="surface w-full max-w-2xl overflow-hidden p-5 sm:p-8"><EchoTaleLogo className="mb-6"/><img src="/images/reading-corner.png" alt="" className="mb-6 h-36 w-full rounded-xl object-cover object-center"/>
+        <h1 className="page-title">Personalize your EchoTale</h1>
         <p className="mt-2 text-textMuted">Choose at least 3 genres to improve recommendations.</p>
         <div className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-3">
           {categories.map((category) => (
             <button
               type="button"
-              className={`rounded-card p-5 font-bold ${selected.includes(category) ? "bg-primary text-white" : "bg-soft text-primary"}`}
+              className={`min-h-14 rounded-xl border border-borderSoft p-4 text-sm font-semibold ${selected.includes(category) ? "bg-primary text-white" : "bg-soft text-primary"}`}
+              aria-pressed={selected.includes(category)}
               key={category}
               onClick={() => toggle(category)}
             >
@@ -55,7 +57,7 @@ export default function OnboardingPage() {
           ))}
         </div>
         {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
-        <Button className="mt-8" onClick={continueToHome} disabled={saving}>
+        <p className="mt-5 text-sm text-textMuted" aria-live="polite">{selected.length} of 3 minimum genres selected</p><Button className="mt-5 w-full" onClick={continueToHome} disabled={saving}>
           {saving ? "Saving..." : "Continue to Home"}
         </Button>
       </section>

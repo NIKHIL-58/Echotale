@@ -1,6 +1,6 @@
-﻿const VERSION="v4";
+const VERSION="v5";
 const SHELL_CACHE=`echotale-shell-${VERSION}`,PAGE_CACHE=`echotale-pages-${VERSION}`,ASSET_CACHE=`echotale-assets-${VERSION}`,API_CACHE=`echotale-public-api-${VERSION}`,DOWNLOAD_CACHE="echotale-downloads-v1";
-const APP_SHELL=["/","/offline","/dashboard","/explore","/library","/bookmarks","/history","/authors","/audiobooks","/podcasts","/premium","/profile","/settings","/auth/login","/auth/signup","/manifest.webmanifest","/icon-192x192.png","/icon-512x512.png","/premium-story-world.png"];
+const APP_SHELL=["/","/offline","/dashboard","/explore","/library","/bookmarks","/history","/authors","/audiobooks","/podcasts","/premium","/profile","/settings","/auth/login","/auth/signup","/manifest.webmanifest","/echotale-mark.svg","/echotale-icon-192.png","/echotale-icon-512.png","/images/listening-world.png","/images/reading-corner.png"];
 self.addEventListener("install",event=>event.waitUntil(caches.open(SHELL_CACHE).then(cache=>Promise.allSettled(APP_SHELL.map(url=>cache.add(url)))).then(()=>self.skipWaiting())));
 self.addEventListener("activate",event=>{const current=new Set([SHELL_CACHE,PAGE_CACHE,ASSET_CACHE,API_CACHE,DOWNLOAD_CACHE]);event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith("echotale-")&&!current.has(k)).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});
 async function cacheFirst(request,name){const cache=await caches.open(name),hit=await cache.match(request);if(hit)return hit;const response=await fetch(request);if(response.ok||response.type==="opaque")cache.put(request,response.clone());return response}

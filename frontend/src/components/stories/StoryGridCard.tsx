@@ -1,5 +1,4 @@
-﻿"use client";
-
+"use client";
 import Link from "next/link";
 import { ArrowUpRight, Bookmark, BookOpen, Clock3, Headphones, Loader2 } from "lucide-react";
 import { getMediaUrl, type Story } from "@/services/storyService";
@@ -7,45 +6,55 @@ import { isBookmarked, toggleBookmark } from "@/lib/userLists";
 import { useEffect, useState } from "react";
 import { addServerBookmark, getServerBookmarks, removeServerBookmark } from "@/services/appService";
 import { getToken } from "@/lib/auth";
-
-export function StoryGridCard({ story }: { story: Story }) {
-  const [bookmarked, setBookmarked] = useState(() => isBookmarked(story.id));
+export function StoryGridCard({ story, compact = false, onBookmarkChange }: { story: Story; compact?: boolean; onBookmarkChange?: (id: string, saved: boolean) => void }) {
+  const [bookmarked, setBookmarked] = useState(false);
   const [saving, setSaving] = useState(false);
-
+  const [error, setError] = useState("");
+  const [coverFailed, setCoverFailed] = useState(false);
   useEffect(() => {
+    setBookmarked(isBookmarked(story.id));
     if (!getToken()) return;
-    getServerBookmarks().then((entries)=>setBookmarked(entries.some((entry)=>entry.story_id===story.id))).catch(()=>undefined);
+    getServerBookmarks().then(entries => setBookmarked(entries.some(entry => entry.story_id === story.id))).catch(() => undefined);
   }, [story.id]);
-
-  async function handleBookmark(event: React.MouseEvent) {
-    event.preventDefault(); event.stopPropagation();
-    if (saving) return;
-    if (!getToken()) { setBookmarked(toggleBookmark(story)); return; }
+  useEffect(() => setCoverFailed(false), [story.cover_image]);
+  async function handleBookmark() {
+    if (saving) return; setSaving(true); setError("");
     try {
-      setSaving(true);
-      const entries=await getServerBookmarks();
-      const existing=entries.find((entry)=>entry.story_id===story.id);
-      if(existing){await removeServerBookmark(existing.id);setBookmarked(false);}else{await addServerBookmark(story.id);setBookmarked(true);}
-    } finally { setSaving(false); }
+      let saved: boolean;
+      if (!getToken()) saved = toggleBookmark(story);
+      else {
+        const entries = await getServerBookmarks(); const existing = entries.find(entry => entry.story_id === story.id);
+        if (existing) { await removeServerBookmark(existing.id); saved = false; }
+        else { await addServerBookmark(story.id); saved = true; }
+      }
+      setBookmarked(saved); onBookmarkChange?.(story.id, saved);
+    } catch { setError("Could not update bookmark. Please try again."); }
+    finally { setSaving(false); }
   }
-
-  const coverUrl=getMediaUrl(story.cover_image);
-  const partsCount=story.audio_parts?.length||0;
-
-  return <Link href={`/stories/${story.id}`} className="group flex h-full flex-col overflow-hidden rounded-[22px] border border-borderSoft bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:border-primary/20 hover:shadow-[0_20px_45px_rgba(31,23,61,.12)]">
-    <div className="relative aspect-[16/10] overflow-hidden bg-gradient-to-br from-soft to-[#e7e0f0]">
-      {coverUrl ? <img src={coverUrl} alt={story.title} className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.035]" onError={(event)=>{event.currentTarget.style.display="none";}} /> : <div className="grid h-full place-items-center"><BookOpen size={38} className="text-primary/55"/></div>}
-      <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/45 to-transparent" />
-      <button type="button" onClick={handleBookmark} disabled={saving} aria-label={bookmarked?"Remove bookmark":"Add bookmark"} title={bookmarked?"Remove bookmark":"Add bookmark"} className={`absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-xl border backdrop-blur-md transition ${bookmarked?"border-primary/20 bg-primary text-white":"border-white/40 bg-white/85 text-textMain hover:text-primary"}`}>
-        {saving?<Loader2 size={16} className="animate-spin"/>:<Bookmark size={16} fill={bookmarked?"currentColor":"none"}/>} 
-      </button>
-      <span className="absolute bottom-3 left-3 inline-flex items-center gap-1.5 rounded-lg bg-black/40 px-2.5 py-1.5 text-[11px] font-bold text-white backdrop-blur-md"><Headphones size={13}/>{partsCount>0?`${partsCount} parts`:"Audio pending"}</span>
-    </div>
-    <div className="flex flex-1 flex-col p-4 sm:p-5">
-      <div className="flex items-start justify-between gap-3"><div className="min-w-0"><h3 className="line-clamp-2 text-base font-extrabold leading-6 tracking-[-.02em] text-textMain sm:text-lg">{story.title}</h3><p className="mt-1 line-clamp-1 text-xs font-semibold text-textMuted">{story.author||"Unknown author"}</p></div><span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-page text-textMuted transition group-hover:bg-soft group-hover:text-primary"><ArrowUpRight size={15}/></span></div>
-      <p className="mt-3 line-clamp-2 flex-1 text-sm leading-6 text-textMuted">{story.description||"No description available."}</p>
-      <div className="mt-4 flex items-center justify-between border-t border-borderSoft pt-3 text-[11px] font-semibold text-textMuted"><span className="inline-flex items-center gap-1.5"><Clock3 size={13}/>{story.duration||0} min</span>{story.audio_status==="generating"?<span className="text-amber-600">Generating audio</span>:story.audio_status==="failed"?<span className="text-red-600">Audio unavailable</span>:<span className="text-emerald-600">Ready to listen</span>}</div>
-    </div>
+  const cover = getMediaUrl(story.cover_image);
+  const parts = story.audio_parts?.length || 0;
+  const ready = parts > 0 || Boolean(story.audio_url);
+  if (compact) return <Link href={`/stories/${story.id}`} className="surface group flex items-center gap-4 p-3 transition hover:border-primary/30 hover:shadow-card">
+    <span className="grid h-20 w-16 shrink-0 place-items-center overflow-hidden rounded-lg bg-soft">{cover && !coverFailed ? <img src={cover} alt="" loading="lazy" className="h-full w-full object-cover" onError={() => setCoverFailed(true)} /> : <BookOpen className="text-primary" size={22}/>}</span>
+    <span className="min-w-0 flex-1"><span className="line-clamp-2 text-sm font-semibold leading-5 group-hover:text-primary">{story.title}</span><span className="mt-1 block truncate text-xs text-textMuted">{story.author || "Unknown author"}</span><span className="mt-2 flex items-center gap-1 text-xs text-textMuted"><Headphones size={12}/>{parts ? `${parts} parts` : "View story"}</span></span><ArrowUpRight size={17} className="shrink-0 text-textMuted" />
   </Link>;
+  return <article className="surface group flex h-full flex-col overflow-hidden transition duration-200 hover:border-primary/30 hover:shadow-card">
+    <div className="relative bg-[#eeeaf3]">
+      <Link href={`/stories/${story.id}`} aria-label={`View ${story.title}`} className="block h-52 overflow-hidden">
+        {cover && !coverFailed ? <img src={cover} alt={story.title} loading="lazy" className="h-full w-full object-contain p-4 transition duration-300 group-hover:scale-[1.025]" onError={() => setCoverFailed(true)} /> : <div className="flex h-full items-end bg-[url('/images/reading-corner.png')] bg-cover bg-center p-4"><span className="rounded-lg bg-white/90 p-2 text-primary"><BookOpen size={22}/></span></div>}
+      </Link>
+      <button type="button" onClick={handleBookmark} disabled={saving} aria-label={`${bookmarked ? "Remove" : "Add"} bookmark: ${story.title}`} aria-pressed={bookmarked} className={`absolute right-3 top-3 grid h-10 w-10 place-items-center rounded-xl border shadow-sm transition ${bookmarked ? "border-primary bg-primary text-white" : "border-white bg-white/95 text-textMuted hover:text-primary"}`}>
+        {saving ? <Loader2 size={17} className="animate-spin"/> : <Bookmark size={17} fill={bookmarked ? "currentColor" : "none"}/>}
+      </button>
+    </div>
+    <div className="flex flex-1 flex-col p-5">
+      <div className="mb-2 flex items-center justify-between gap-2 text-xs text-textMuted"><span>{story.category || "Story"}</span>{story.is_premium && <span className="rounded-md bg-amber-50 px-2 py-0.5 text-amber-800">Premium</span>}</div>
+      <h3 className="line-clamp-2 text-base font-bold leading-6 tracking-[-.015em]"><Link href={`/stories/${story.id}`} className="hover:text-primary">{story.title}</Link></h3>
+      <p className="mt-1 truncate text-sm text-textMuted">{story.author || "Unknown author"}</p>
+      <p className="mt-3 line-clamp-2 text-sm leading-6 text-textMuted">{story.description || "Open this story to discover more."}</p>
+      <div className="mt-auto pt-4"><div className="flex flex-wrap items-center justify-between gap-2 border-t border-borderSoft pt-3 text-xs text-textMuted"><span className="inline-flex items-center gap-1.5">{ready ? <Headphones size={14}/> : <BookOpen size={14}/>}{parts ? `${parts} parts` : story.audio_status === "generating" ? "Preparing audio" : ready ? "Audio available" : "Read story"}</span>{story.duration > 0 && <span className="inline-flex items-center gap-1.5"><Clock3 size={14}/>{story.duration} min</span>}</div></div>
+      {error && <p role="alert" className="mt-3 text-xs text-red-700">{error}</p>}
+    </div>
+  </article>;
 }
 

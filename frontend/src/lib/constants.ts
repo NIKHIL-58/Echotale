@@ -3,9 +3,9 @@ import { BookOpen, Compass, Home, Library, Bookmark, History, User, Settings, Be
 export const navItems = [
   { href: "/dashboard", label: "Home", icon: Home },
   { href: "/explore", label: "Explore", icon: Compass },
-  { href: "/explore", label: "Stories", icon: BookOpen },
-  { href: "/explore?type=audiobooks", label: "Audiobooks", icon: Headphones },
-  { href: "/explore?type=podcasts", label: "Podcasts", icon: Bell },
+  { href: "/stories", label: "Stories", icon: BookOpen },
+  { href: "/audiobooks", label: "Audiobooks", icon: Headphones },
+  { href: "/podcasts", label: "Podcasts", icon: Bell },
   { href: "/library", label: "My Library", icon: Library },
   { href: "/bookmarks", label: "Bookmarks", icon: Bookmark },
   { href: "/history", label: "History", icon: History },
