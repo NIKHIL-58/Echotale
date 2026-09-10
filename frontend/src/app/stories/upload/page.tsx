@@ -24,6 +24,7 @@ export default function UploadStoryPage() {
 
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [voice, setVoice] = useState("alloy");
+  const [startPage, setStartPage] = useState("");
 
   const [form, setForm] = useState({
     title: "",
@@ -69,10 +70,11 @@ export default function UploadStoryPage() {
       formData.append("duration", form.duration || "0");
       formData.append("tags", form.tags);
       formData.append("voice", voice);
+      if (startPage) formData.append("narration_start_page", startPage);
 
-      await createStory(formData);
+      const created = await createStory(formData);
 
-      router.push("/explore");
+      router.push(`/stories/${created.id}`);
     } catch (err: any) {
       setError(err.message || "Story upload failed.");
     } finally {
@@ -94,6 +96,8 @@ export default function UploadStoryPage() {
               {error}
             </div>
           )}
+
+          {!audioFile && <section className="rounded-xl border border-borderSoft bg-page p-4"><label htmlFor="narration-start" className="text-sm font-bold">Where does the story begin?</label><p className="mt-2 text-sm leading-6 text-textMuted">Leave this blank to detect the prologue or opening chapter automatically. If you know it, enter the PDF viewer page number to skip covers and copyright pages.</p><input id="narration-start" type="number" min={1} step={1} value={startPage} onChange={e => setStartPage(e.target.value)} placeholder="Auto-detect" className="mt-3 h-11 w-44 rounded-xl border border-borderSoft bg-white px-3 text-sm" /><p className="mt-2 text-xs text-textMuted">You can preview and adjust this on the story page. Uncertain detection will pause generation for your review.</p></section>}
 
           <label className="block cursor-pointer rounded-2xl border-2 border-dashed border-primary/30 bg-soft/40 p-6 text-center transition hover:border-primary hover:bg-soft focus-within:ring-4 focus-within:ring-primary/20">
             <div className="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-3xl bg-primary text-white">

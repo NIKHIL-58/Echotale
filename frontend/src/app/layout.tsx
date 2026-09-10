@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { PwaRegister } from "@/components/PwaRegister";
+import { BottomPlayer } from "@/components/layout/BottomPlayer";
 
 export const metadata: Metadata = {
   title: "EchoTale",
@@ -31,6 +32,7 @@ export default function RootLayout({
       <body>
         <PwaRegister />
         {children}
+        <BottomPlayer />
       </body>
     </html>
   );

@@ -6,6 +6,7 @@ urlpatterns = [
     path("create/", views.create_story),
     path("my-stories/", views.my_stories),
     path("<str:story_id>/regenerate-audio-parts/", views.regenerate_story_audio_parts),
+    path("<str:story_id>/narration-preview/", views.narration_preview),
     path("<str:story_id>/insights/", views.story_insights),
     path("<str:story_id>/", views.story_detail),
 ]

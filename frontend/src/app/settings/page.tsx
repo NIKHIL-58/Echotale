@@ -6,6 +6,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { Bell, Check, CheckCircle2, ChevronRight, Crown, Globe2, Loader2, PlayCircle, Save, Settings2, ShieldCheck, Target, UserRound } from "lucide-react";
 import { getStoredUser } from "@/lib/auth";
 import { updateProfile } from "@/services/appService";
+import { usePlayerStore } from "@/store/playerStore";
 
 const languages = ["English", "Hindi", "Spanish", "French"];
 const goalPresets = [15, 30, 60, 90];
@@ -37,7 +38,7 @@ export default function SettingsPage() {
       const user = await updateProfile({ language, listening_goal: goal });
       localStorage.setItem("user", JSON.stringify(user));
       localStorage.setItem("echotale_notifications", String(notifications));
-      localStorage.setItem("echotale_autoplay", String(autoplay));
+      usePlayerStore.getState().setAutoplay(autoplay);
       setMessage("Your preferences have been saved.");
     } catch {
       setError(true); setMessage("Please sign in to update your settings.");

@@ -4,7 +4,6 @@ import { usePathname, useRouter } from "next/navigation";
 import { Sidebar } from "./Sidebar";
 import { Topbar } from "./Topbar";
 import { RightPanel } from "./RightPanel";
-import { BottomPlayer } from "./BottomPlayer";
 import { MobileBottomNav } from "./MobileBottomNav";
 export function AppLayout({ children, rightPanel = false }: { children: React.ReactNode; rightPanel?: boolean }) {
   const router = useRouter(); const pathname = usePathname(); const [ready, setReady] = useState(false);
@@ -21,6 +20,6 @@ export function AppLayout({ children, rightPanel = false }: { children: React.Re
         <main id="main-content" tabIndex={-1} className="mt-7 flex gap-6 outline-none sm:mt-8"><div className="app-content min-w-0 flex-1">{children}</div>{rightPanel && <RightPanel />}</main>
       </div>
     </div>
-    <BottomPlayer /><MobileBottomNav />
+    <MobileBottomNav />
   </div>;
 }

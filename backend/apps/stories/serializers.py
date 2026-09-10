@@ -10,6 +10,11 @@ class StoryCreateSerializer(serializers.Serializer):
     duration = serializers.IntegerField(required=False)
     is_premium = serializers.BooleanField(required=False)
     voice = serializers.CharField(required=False, allow_blank=True)
+    narration_start_page = serializers.IntegerField(required=False, allow_null=True, min_value=1)
+
+
+class NarrationOptionsSerializer(serializers.Serializer):
+    start_page = serializers.IntegerField(required=False, allow_null=True, min_value=1)
 
 
 def can_access_story_media(story, user=None):
@@ -61,5 +66,10 @@ def story_to_dict(story, user=None):
         "audio_status": story.audio_status,
         "audio_error": story.audio_error if include_media else "",
         "voice": getattr(story, "voice", "alloy"),
+        "narration_start_page": getattr(story, "narration_start_page", None),
+        "narration_info": getattr(story, "narration_info", {}) if include_media else {},
+        "can_manage": bool(user and getattr(user, "is_authenticated", False) and (
+            story.uploaded_by == str(user.id) or getattr(getattr(user, "doc", None), "role", "") == "admin"
+        )),
         "created_at": story.created_at.isoformat() if story.created_at else None,
     }

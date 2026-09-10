@@ -21,7 +21,8 @@ from common.response import success, error
 from common.permissions import can_manage_story
 from common.supabase_storage import upload_django_file, upload_bytes, upload_local_file
 from apps.stories.models import StoryDocument, AudioPartDocument
-from apps.stories.serializers import StoryCreateSerializer, story_to_dict
+from apps.stories.serializers import StoryCreateSerializer, NarrationOptionsSerializer, story_to_dict
+from apps.stories.narration import detect_story_start, split_narration
 
 
 ALLOWED_VOICES = [
@@ -171,19 +172,6 @@ def clean_text_for_tts(text):
         lines.append(clean_line)
 
     cleaned = "\n".join(lines)
-
-    start_markers = [
-        "In a little district",
-        "One dollar and eighty-seven cents",
-        "When we were children",
-        "I became what I am today",
-    ]
-
-    for marker in start_markers:
-        index = cleaned.lower().find(marker.lower())
-        if index != -1:
-            cleaned = cleaned[index:]
-            break
 
     cleaned = re.sub(r"https?://\S+", "", cleaned)
     cleaned = re.sub(r"www\.\S+", "", cleaned)
@@ -413,34 +401,47 @@ def extract_pdf_full_text(book_url, max_pages=100):
                 pass
 
 
+def extract_pdf_narration(book_url, start_page=None, preview=False, max_pages=100):
+    pdf_path, should_delete = get_pdf_local_path(book_url)
+    try:
+        with fitz.open(pdf_path) as doc:
+            if not len(doc):
+                raise ValueError("The PDF has no pages.")
+            if start_page is not None and not 1 <= start_page <= len(doc):
+                raise ValueError(f"Start page must be between 1 and {len(doc)}.")
+            cache = {}
+            def page_text(index):
+                if index not in cache:
+                    cache[index] = extract_page_text(doc[index])
+                return cache[index]
+            if start_page is None:
+                detected = detect_story_start([page_text(i) for i in range(min(40, len(doc)))])
+                selected = detected.page
+                confidence, reason = detected.confidence, detected.reason
+            else:
+                selected, confidence, reason = start_page, "manual", "Using your chosen PDF page."
+            end_page = min(len(doc), selected - 1 + max_pages)
+            info = {
+                "start_page": selected, "total_pages": len(doc), "end_page": end_page,
+                "confidence": confidence, "reason": reason,
+                "preview": clean_text_for_tts(page_text(selected - 1))[:700],
+                "limited": end_page < len(doc),
+            }
+            if preview:
+                return "", info
+            if confidence == "low":
+                raise ValueError("Story start is uncertain. Preview the narration and choose a PDF start page before generating.")
+            text = clean_text_for_tts("\n".join(page_text(i) for i in range(selected - 1, end_page)))
+            if not text:
+                raise ValueError("No readable text found from this page. This PDF may need OCR.")
+            return text, info
+    finally:
+        if should_delete and os.path.exists(pdf_path):
+            os.remove(pdf_path)
+
+
 def split_text_for_audio(text, max_chars=4500):
-    if not text:
-        return []
-
-    text = re.sub(r"\s+", " ", text).strip()
-    sentences = re.split(r"(?<=[.!?])\s+", text)
-
-    chunks = []
-    current = ""
-
-    for sentence in sentences:
-        sentence = sentence.strip()
-
-        if not sentence:
-            continue
-
-        if len(current) + len(sentence) + 1 <= max_chars:
-            current = f"{current} {sentence}".strip()
-        else:
-            if current:
-                chunks.append(current)
-
-            current = sentence
-
-    if current:
-        chunks.append(current)
-
-    return chunks
+    return split_narration(text, max_chars)
 
 
 def generate_audio_from_text(text, title, part_number=1, voice="alloy"):
@@ -513,14 +514,15 @@ def generate_audio_parts_background(story_id, max_pages=100, max_parts=80):
         story.updated_at = datetime.utcnow()
         story.save()
 
-        full_pdf_text, text_error = extract_pdf_full_text(
+        full_pdf_text, narration_info = extract_pdf_narration(
             story.book_url,
+            start_page=getattr(story, "narration_start_page", None),
             max_pages=max_pages,
         )
 
         if not full_pdf_text:
             story.audio_status = "failed"
-            story.audio_error = text_error
+            story.audio_error = "No readable narration text found."
             story.updated_at = datetime.utcnow()
             story.save()
             return
@@ -534,13 +536,10 @@ def generate_audio_parts_background(story_id, max_pages=100, max_parts=80):
             story.save()
             return
 
-        story.audio_parts = []
-        story.audio_url = ""
-        story.duration = 0
-        story.updated_at = datetime.utcnow()
-        story.save()
-
         total_duration = 0
+        generated_parts = []
+        failure = ""
+        narration_info["part_limit_reached"] = len(chunks) > max_parts
         voice = normalize_voice(getattr(story, "voice", "alloy"))
 
         for index, chunk in enumerate(chunks[:max_parts], start=1):
@@ -552,10 +551,8 @@ def generate_audio_parts_background(story_id, max_pages=100, max_parts=80):
             )
 
             if not audio_url:
-                story.audio_error = audio_error or f"Part {index} failed."
-                story.updated_at = datetime.utcnow()
-                story.save()
-                continue
+                failure = f"Generation stopped at part {index}: {audio_error or 'Unable to generate audio.'}"
+                break
 
             duration_estimate = max(1, round(len(chunk.split()) / 150))
 
@@ -568,10 +565,10 @@ def generate_audio_parts_background(story_id, max_pages=100, max_parts=80):
                 created_at=datetime.utcnow(),
             )
 
-            story.audio_parts.append(part)
-
-            if not story.audio_url:
-                story.audio_url = audio_url
+            generated_parts.append(part)
+            story.audio_parts = generated_parts
+            story.audio_url = generated_parts[0].audio_url
+            story.narration_info = narration_info
 
             total_duration += duration_estimate
             story.duration = total_duration
@@ -579,12 +576,16 @@ def generate_audio_parts_background(story_id, max_pages=100, max_parts=80):
             story.updated_at = datetime.utcnow()
             story.save()
 
-        if story.audio_parts:
+        limited = narration_info["limited"] or narration_info["part_limit_reached"]
+        if generated_parts and not failure and not limited:
             story.audio_status = "generated"
             story.audio_error = ""
         else:
-            story.audio_status = "failed"
-            story.audio_error = story.audio_error or "No audio parts generated."
+            story.audio_status = "failed" if failure or not generated_parts else "partial"
+            story.audio_error = failure or (
+                f"Only part of this book was generated (processing limits: {max_pages} PDF pages / {max_parts} audio parts)."
+                if limited else "No audio parts generated."
+            )
 
         story.updated_at = datetime.utcnow()
         story.save()
@@ -726,6 +727,7 @@ def create_story(request):
         audio_status="generated" if provided_audio_url else "generating",
         audio_error="",
         voice=voice,
+        narration_start_page=data.get("narration_start_page"),
         created_at=datetime.utcnow(),
         updated_at=datetime.utcnow(),
     )
@@ -778,16 +780,30 @@ def regenerate_story_audio_parts(request, story_id):
     if not story.book_url:
         return error("This story does not have a PDF file.", 400)
 
-    story.voice = normalize_voice(
-        request.data.get("voice") or getattr(story, "voice", "alloy")
+    options = NarrationOptionsSerializer(data=request.data)
+    if not options.is_valid():
+        return error("Start page must be a positive PDF page number, or null for automatic detection.", 400)
+    if story.audio_status == "generating":
+        return error("Audio is already generating. Please wait for it to finish.", 409)
+    start_page = options.validated_data.get("start_page", getattr(story, "narration_start_page", None))
+    try:
+        _, info = extract_pdf_narration(story.book_url, start_page=start_page, preview=True)
+        if info["confidence"] == "low":
+            return error("Please choose the PDF page where the story starts.", 400)
+    except ValueError as exc:
+        return error(str(exc), 400)
+    except Exception:
+        return error("Unable to read this PDF. Check the file and try again.", 422)
+    # Acquire the generation state atomically; do not discard existing audio on a failed attempt.
+    claimed = StoryDocument.objects(id=story.id, audio_status__ne="generating").modify(
+        new=True, set__audio_status="generating",
+        set__audio_error="", set__narration_start_page=start_page,
+        set__voice=normalize_voice(request.data.get("voice") or story.voice),
+        set__updated_at=datetime.utcnow(),
     )
-    story.audio_status = "generating"
-    story.audio_error = ""
-    story.audio_parts = []
-    story.audio_url = ""
-    story.duration = 0
-    story.updated_at = datetime.utcnow()
-    story.save()
+    if not claimed:
+        return error("Audio is already generating. Please wait for it to finish.", 409)
+    story = claimed
 
     threading.Thread(
         target=generate_audio_parts_background,
@@ -800,6 +816,29 @@ def regenerate_story_audio_parts(request, story_id):
         "Audio regeneration has started.",
     )
 
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def narration_preview(request, story_id):
+    story = StoryDocument.objects(id=story_id).first() if ObjectId.is_valid(story_id) else None
+    if not story:
+        return error("Story not found", 404)
+    if not can_manage_story(request, story):
+        return error("You can only preview narration for your own story.", 403)
+    if not story.book_url:
+        return error("This story does not have a PDF.", 400)
+    value = request.query_params.get("start_page")
+    options = NarrationOptionsSerializer(data={"start_page": value or None})
+    if not options.is_valid():
+        return error("Enter a positive PDF page number.", 400)
+    try:
+        _, info = extract_pdf_narration(story.book_url, start_page=options.validated_data["start_page"], preview=True)
+        return success(info, "Narration preview ready.")
+    except ValueError as exc:
+        return error(str(exc), 400)
+    except Exception:
+        return error("Unable to read this PDF. Check the file and try again.", 422)
 
 def _fallback_story_insights(story, source_text):
     text = re.sub(r"\s+", " ", source_text or story.description or "").strip()

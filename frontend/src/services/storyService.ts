@@ -38,7 +38,19 @@ export type Story = {
   audio_status?: string;
   audio_error?: string;
   voice?: string;
+  can_manage?: boolean;
+  narration_start_page?: number | null;
+  narration_info?: NarrationPreview;
 };
+
+export type NarrationPreview = { start_page: number; total_pages: number; end_page: number; confidence: string; reason: string; preview: string; limited: boolean; part_limit_reached?: boolean };
+export async function getNarrationPreview(storyId: string, startPage: number | null): Promise<NarrationPreview> {
+  const query = startPage === null ? "" : `?start_page=${startPage}`;
+  const response = await fetch(`${API_URL}/stories/${storyId}/narration-preview/${query}`, { headers: authHeaders(), cache: "no-store" });
+  const payload = await response.json();
+  if (!response.ok || !payload.success) throw new Error(payload.message || "Unable to preview narration.");
+  return payload.data;
+}
 
 export function getMediaUrl(path?: string) {
   if (!path) return "";
@@ -120,7 +132,7 @@ export async function createStory(formData: FormData) {
   return data.data;
 }
 
-export async function regenerateAudioParts(storyId: string, voice = "alloy") {
+export async function regenerateAudioParts(storyId: string, voice = "alloy", startPage?: number | null) {
   const token = localStorage.getItem("access_token");
 
   if (!token) {
@@ -135,7 +147,7 @@ export async function regenerateAudioParts(storyId: string, voice = "alloy") {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ voice }),
+      body: JSON.stringify({ voice, ...(startPage !== undefined ? { start_page: startPage } : {}) }),
     }
   );
 

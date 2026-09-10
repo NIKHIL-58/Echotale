@@ -49,6 +49,8 @@ class StoryDocument(Document):
     audio_status = StringField(default="not_generated")
     audio_error = StringField(default="")
     voice = StringField(default="alloy")
+    narration_start_page = IntField(default=None, null=True, min_value=1)
+    narration_info = DictField(default=dict)
     insights = DictField(default=dict)
 
     created_at = DateTimeField(default=datetime.utcnow)

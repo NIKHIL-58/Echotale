@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { OfflineDownloadManager } from "@/components/audio/OfflineDownloadManager";
 import { StoryInsights } from "@/components/story/StoryInsights";
+import { StoryAudioPanel } from "@/components/story/StoryAudioPanel";
 
 import { usePlayerStore } from "@/store/playerStore";
 import { addToHistory } from "@/lib/userLists";
@@ -30,8 +31,6 @@ import {
   Library,
   Loader2,
   MessageSquareText,
-  Play,
-  RefreshCcw,
   Send,
   Star,
   UserRound,
@@ -42,7 +41,6 @@ export default function StoryDetailPage() {
   const storyId = params.storyId as string;
 
   const [story, setStory] = useState<Story | null>(null);
-  const [selectedPart, setSelectedPart] = useState(0);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState("");
@@ -74,14 +72,14 @@ export default function StoryDetailPage() {
   }
 }
 
-  async function handleGenerateAudioParts() {
+  async function handleGenerateAudioParts(startPage: number | null) {
     try {
       setGenerating(true);
       setError("");
 
-      const updatedStory = await regenerateAudioParts(storyId);
+      const updatedStory = await regenerateAudioParts(storyId, story?.voice || "alloy", startPage);
       setStory(updatedStory);
-      setSelectedPart(0);
+      if (usePlayerStore.getState().track?.storyId === storyId) usePlayerStore.getState().clearTrack();
     } catch (err: any) {
       setError(err.message || "Audio generation failed.");
     } finally {
@@ -89,29 +87,6 @@ export default function StoryDetailPage() {
     }
   }
 
-  function handleSelectAudioPart(index: number) {
-  if (!story) return;
-
-  const audioParts = story.audio_parts || [];
-
-  if (!audioParts.length) return;
-
-  const queue = audioParts.map((part) => ({
-    id: `${story.id}-part-${part.part_number}`,
-    storyId: story.id,
-    chapterId: String(part.part_number),
-    chapterNumber: part.part_number,
-    title: `${story.title} - ${part.title || `Part ${part.part_number}`}`,
-    author: story.author || "Unknown Author",
-    cover: getMediaUrl(story.cover_image),
-    duration: (part.duration_estimate || 5) * 60,
-    audioUrl: getMediaUrl(part.audio_url),
-    textPreview: part.text_preview,
-  }));
-
-  setSelectedPart(index);
-  usePlayerStore.getState().setQueue(queue, index);
-}
   async function handleAddToLibrary() {
     if (!getToken()) {
       setActionMessage("Please sign in to add this story to your library.");
@@ -197,13 +172,6 @@ export default function StoryDetailPage() {
   const coverUrl = getMediaUrl(story.cover_image);
   const bookUrl = getMediaUrl(story.book_url);
 
-  const audioParts = story.audio_parts || [];
-  const activePart = audioParts[selectedPart];
-
-  const activeAudioUrl = activePart
-    ? getMediaUrl(activePart.audio_url)
-    : getMediaUrl(story.audio_url);
-
   return (
     <AppLayout rightPanel={false}>
       <div className="space-y-6">
@@ -234,7 +202,7 @@ export default function StoryDetailPage() {
           <div className="flex flex-col justify-center">
 
 
-            <h1 className="text-4xl font-extrabold text-textMain">
+            <h1 className="page-title">
               {story.title}
             </h1>
 
@@ -300,95 +268,7 @@ export default function StoryDetailPage() {
             )}
           </div>
         </section>
-            <section className="rounded-2xl border border-borderSoft bg-white p-5 sm:p-6">
-              <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <h3 className="font-bold text-textMain">Audiobook Parts</h3>
-                  <p className="text-sm text-textMuted">
-                    Select any completed part to start listening.
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  {audioParts.length > 0 && (
-                    <span className="rounded-full bg-soft px-4 py-2 text-sm font-bold text-primary">
-                      {audioParts.length} parts
-                    </span>
-                  )}
-
-                  <button
-                    type="button"
-                    onClick={handleGenerateAudioParts}
-                    disabled={generating || story.audio_status === "generating"}
-                    className="inline-flex h-10 items-center gap-2 rounded-full bg-primary px-4 text-sm font-bold text-white disabled:opacity-60"
-                  >
-                    {generating || story.audio_status === "generating" ? (
-                      <>
-                        <Loader2 size={16} className="animate-spin" />
-                        Generating...
-                      </>
-                    ) : (
-                      <>
-                        <RefreshCcw size={16} />
-                        Generate Audio
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              {story.audio_status === "generating" && (
-                <div className="mb-4 flex items-center gap-3 rounded-2xl bg-blue-50 px-5 py-4 text-sm font-semibold text-blue-700">
-                  <Loader2 size={18} className="animate-spin" />
-                  Audio is still generating. Completed parts will appear here
-                  automatically.
-                </div>
-              )}
-              {!activeAudioUrl && (
-                <div className="rounded-2xl bg-yellow-50 px-5 py-4 text-sm font-semibold text-yellow-700">
-                  Audio is not generated yet. Click Generate Audio.
-                  {story.audio_error && (
-                    <p className="mt-2 text-xs">{story.audio_error}</p>
-                  )}
-                </div>
-              )}
-
-              {audioParts.length > 0 && (
-                <div className="mt-5 grid gap-3 md:grid-cols-2">
-                  {audioParts.map((part, index) => (
-                    <button
-                      key={part.part_number}
-                      type="button"
-                      onClick={() => handleSelectAudioPart(index)}
-                      className={`flex items-center justify-between rounded-2xl px-4 py-3 text-left transition ${
-                        selectedPart === index
-                          ? "bg-primary text-white"
-                          : "bg-white text-textMain hover:bg-soft"
-                      }`}
-                    >
-                      <div className="min-w-0">
-                        <p className="font-bold">
-                          {part.title || `Part ${part.part_number}`}
-                        </p>
-                        <p
-                          className={`mt-1 line-clamp-1 text-xs ${
-                            selectedPart === index
-                              ? "text-white/70"
-                              : "text-textMuted"
-                          }`}
-                        >
-                          {part.text_preview}
-                        </p>
-                      </div>
-
-                      <span className="ml-4 shrink-0 text-sm font-bold">
-                        {part.duration_estimate || 5} min
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </section>
+        <StoryAudioPanel story={story} busy={generating} onGenerate={handleGenerateAudioParts} />
 
         <StoryInsights storyId={story.id} />
 
